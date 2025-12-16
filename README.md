@@ -33,8 +33,14 @@ That's it! Click the bookmark whenever you want to see the reticle.
 For automatic running every time you visit the page:
 
 1. Install [Tampermonkey](https://www.tampermonkey.net/) browser extension
-2. **[Click here to install the script](https://github.com/KatsuJinCode/claude-usage-reticle/raw/main/usage-reticle.user.js)** - Tampermonkey will prompt you to install
-3. Visit Claude's usage page - the reticle appears automatically
+2. **Enable script injection** (required for Chrome/Edge):
+   - **Chrome/Edge v138+**: Right-click Tampermonkey icon → "Manage Extension" → Enable "Allow User Scripts"
+   - **Older Chrome/Edge**: Go to `chrome://extensions` → Enable "Developer Mode" (top-right toggle)
+   - **Firefox/Safari**: No extra setup needed
+3. **[Click here to install the script](https://github.com/KatsuJinCode/claude-usage-reticle/raw/main/usage-reticle.user.js)** - Tampermonkey will prompt you to install
+4. Visit Claude's usage page - the reticle appears automatically
+
+> **Troubleshooting**: If the script installs but nothing appears, check the [Tampermonkey FAQ](https://www.tampermonkey.net/faq.php) for browser-specific setup.
 
 ## How It Works
 

@@ -168,6 +168,7 @@
             <p>Auto-runs every time you visit the usage page.</p>
             <ol>
                 <li>Install <a href="https://www.tampermonkey.net/" target="_blank">Tampermonkey</a></li>
+                <li><strong>Enable script injection</strong> (<a href="#enable-scripts">see below</a>)</li>
                 <li>Click the button below</li>
             </ol>
             <a class="install-btn" href="https://github.com/KatsuJinCode/claude-usage-reticle/raw/main/usage-reticle.user.js">Install Script</a>
@@ -183,6 +184,32 @@
             <a class="install-btn secondary" href="#bookmarklet">See Below ↓</a>
         </div>
     </div>
+
+    <h2 id="enable-scripts">⚠️ Enable Script Injection (Required for Chrome/Edge)</h2>
+
+    <div class="note" style="background: #fee2e2; border-color: #dc2626;">
+        <strong>Important:</strong> Chrome and Edge require additional setup for Tampermonkey to inject scripts. Without this, the extension installs but scripts won't run.
+    </div>
+
+    <h3>Chrome / Edge (v138+)</h3>
+    <ol>
+        <li>Right-click the Tampermonkey icon in your toolbar</li>
+        <li>Select <strong>"Manage Extension"</strong></li>
+        <li>Enable the <strong>"Allow User Scripts"</strong> toggle</li>
+    </ol>
+
+    <h3>Chrome / Edge (older versions)</h3>
+    <ol>
+        <li>Go to <code>chrome://extensions</code> or <code>edge://extensions</code></li>
+        <li>Enable <strong>Developer Mode</strong> (toggle in top-right corner)</li>
+    </ol>
+
+    <h3>Firefox / Safari</h3>
+    <p>No additional setup needed. Scripts run automatically after installation.</p>
+
+    <p style="font-size: 13px; color: #666;">
+        For detailed troubleshooting, see the <a href="https://www.tampermonkey.net/faq.php" target="_blank">official Tampermonkey FAQ</a>.
+    </p>
 
     <h2 id="bookmarklet">Bookmarklet Installation</h2>
 

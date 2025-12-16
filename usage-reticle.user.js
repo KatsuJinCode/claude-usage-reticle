@@ -1,225 +1,105 @@
 // ==UserScript==
-// @name         Claude Usage Time Reticle
-// @namespace    http://tampermonkey.net/
-// @version      1.2
-// @description  Overlay time-progress reticle on Claude.ai usage bars showing where usage SHOULD be
-// @author       Claude Usage Visual Inject
+// @name         Claude Usage Reticle
+// @namespace    https://github.com/KatsuJinCode
+// @version      1.5
+// @description  Visual time-progress marker showing where your Claude usage SHOULD be based on time elapsed in the reset window
+// @author       KatsuJinCode
 // @match        https://claude.ai/*
-// @grant        GM_addStyle
+// @icon         https://claude.ai/favicon.ico
+// @grant        none
+// @license      MIT
+// @homepageURL  https://github.com/KatsuJinCode/claude-usage-reticle
+// @supportURL   https://github.com/KatsuJinCode/claude-usage-reticle/issues
 // @run-at       document-idle
 // ==/UserScript==
 
 (function() {
     'use strict';
 
-    GM_addStyle(`
-        .time-reticle {
-            position: absolute;
-            width: 2px;
-            height: 100%;
-            background-color: #dc2626;
-            box-shadow: 0 0 2px rgba(0, 0, 0, 0.5);
-            pointer-events: none;
-            z-index: 10;
-            top: 0;
-            border-radius: 1px;
-        }
+    var style = document.createElement('style');
+    style.textContent = '.time-reticle{position:absolute;width:2px;height:100%;background-color:#dc2626;box-shadow:0 0 2px rgba(0,0,0,0.5);pointer-events:none;z-index:10;top:0}.time-reticle::before{content:"";position:absolute;top:-5px;left:-3px;border-left:4px solid transparent;border-right:4px solid transparent;border-top:5px solid #dc2626}.time-reticle::after{content:"";position:absolute;bottom:-5px;left:-3px;border-left:4px solid transparent;border-right:4px solid transparent;border-bottom:5px solid #dc2626}.time-reticle-label{position:absolute;top:-20px;left:50%;transform:translateX(-50%);background:#dc2626;color:white;padding:1px 4px;border-radius:2px;font-size:9px;font-weight:600}';
+    document.head.appendChild(style);
 
-        .time-reticle::before {
-            content: '';
-            position: absolute;
-            top: -5px;
-            left: -3px;
-            width: 0;
-            height: 0;
-            border-left: 4px solid transparent;
-            border-right: 4px solid transparent;
-            border-top: 5px solid #dc2626;
-        }
+    function addReticles() {
+        var containers = document.querySelectorAll('div.flex.flex-row.gap-x-8.justify-between.items-center');
+        var added = 0;
 
-        .time-reticle::after {
-            content: '';
-            position: absolute;
-            bottom: -5px;
-            left: -3px;
-            width: 0;
-            height: 0;
-            border-left: 4px solid transparent;
-            border-right: 4px solid transparent;
-            border-bottom: 5px solid #dc2626;
-        }
+        containers.forEach(function(c) {
+            var p = c.querySelector('p.text-text-400.whitespace-nowrap');
+            if (!p) return;
+            var t = p.textContent;
+            if (!t.match(/resets?\s/i)) return;
 
-        .time-reticle-label {
-            position: absolute;
-            top: -20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: #dc2626;
-            color: white;
-            padding: 1px 4px;
-            border-radius: 2px;
-            font-size: 9px;
-            font-weight: 600;
-            white-space: nowrap;
-            letter-spacing: 0.5px;
-        }
-    `);
+            var bar = c.querySelector('div.bg-bg-000.rounded.border.h-4');
+            if (!bar) return;
 
-    const HOURS_IN_WEEK = 168;
-    const HOURS_IN_SESSION = 5;  // Current session is 5-hour window
-    const DEBUG = false;
+            var titleEl = c.querySelector('p.text-text-100');
+            var isSession = titleEl && titleEl.textContent.toLowerCase().includes('current session');
+            var windowHrs = isSession ? 5 : 168;
+            var hrsUntil;
 
-    function log(...args) {
-        if (DEBUG) console.log('[UsageReticle]', ...args);
-    }
-
-    /**
-     * Parse reset time text and return hours until reset
-     */
-    function parseHoursUntilReset(resetText) {
-        log('Parsing reset text:', resetText);
-
-        // Handle "Resets in X hr Y min" format
-        const inMatch = resetText.match(/resets?\s+in\s+(?:(\d+)\s*hr?)?\s*(?:(\d+)\s*min)?/i);
-        if (inMatch && (inMatch[1] || inMatch[2])) {
-            const hours = parseInt(inMatch[1] || 0);
-            const minutes = parseInt(inMatch[2] || 0);
-            return hours + (minutes / 60);
-        }
-
-        // Handle "Resets Day HH:MM AM/PM" format
-        const dayMatch = resetText.match(/resets?\s+(sun|mon|tue|wed|thu|fri|sat)\w*\s+(\d{1,2}):(\d{2})\s*(am|pm)/i);
-        if (dayMatch) {
-            const dayName = dayMatch[1].toLowerCase().substring(0, 3);
-            let hours = parseInt(dayMatch[2]);
-            const minutes = parseInt(dayMatch[3]);
-            const ampm = dayMatch[4].toLowerCase();
-
-            if (ampm === 'pm' && hours !== 12) hours += 12;
-            if (ampm === 'am' && hours === 12) hours = 0;
-
-            const dayIndex = { sun: 0, mon: 1, tue: 2, wed: 3, thu: 4, fri: 5, sat: 6 };
-            const resetDayOfWeek = dayIndex[dayName];
-
-            const now = new Date();
-            const resetDate = new Date();
-            resetDate.setHours(hours, minutes, 0, 0);
-
-            const currentDay = now.getDay();
-            let daysUntilReset = resetDayOfWeek - currentDay;
-            if (daysUntilReset < 0) daysUntilReset += 7;
-            if (daysUntilReset === 0 && resetDate <= now) daysUntilReset = 7;
-
-            resetDate.setDate(now.getDate() + daysUntilReset);
-
-            const msUntilReset = resetDate - now;
-            return msUntilReset / (1000 * 60 * 60);
-        }
-
-        return null;
-    }
-
-    /**
-     * Calculate reticle position based on hours until reset and window size
-     */
-    function calculateReticlePosition(hoursUntilReset, windowHours) {
-        if (hoursUntilReset === null) return null;
-        const hoursSinceReset = windowHours - hoursUntilReset;
-        const position = (hoursSinceReset / windowHours) * 100;
-        return Math.max(0, Math.min(100, position));
-    }
-
-    /**
-     * Add reticle to a progress bar element
-     */
-    function addReticleToBar(barTrack, position) {
-        const computedStyle = window.getComputedStyle(barTrack);
-        if (computedStyle.position === 'static') {
-            barTrack.style.position = 'relative';
-        }
-        barTrack.style.overflow = 'visible';
-
-        const existing = barTrack.querySelector('.time-reticle');
-        if (existing) existing.remove();
-
-        const reticle = document.createElement('div');
-        reticle.className = 'time-reticle';
-        reticle.style.left = `${position}%`;
-
-        const label = document.createElement('div');
-        label.className = 'time-reticle-label';
-        label.textContent = 'NOW';
-        reticle.appendChild(label);
-
-        barTrack.appendChild(reticle);
-        log('Added reticle at', position.toFixed(1) + '%');
-    }
-
-    /**
-     * Detect if this is a current session bar (5hr) or weekly bar (168hr)
-     */
-    function getWindowHours(container) {
-        const titleEl = container.querySelector('p.text-text-100');
-        if (titleEl && titleEl.textContent.toLowerCase().includes('current session')) {
-            return HOURS_IN_SESSION;
-        }
-        return HOURS_IN_WEEK;
-    }
-
-    /**
-     * Find usage sections and add reticles
-     */
-    function processUsageBars() {
-        log('Processing usage bars...');
-
-        const containers = document.querySelectorAll('div.flex.flex-row.gap-x-8.justify-between.items-center');
-
-        log('Found containers:', containers.length);
-
-        containers.forEach((container, idx) => {
-            const resetTextEl = container.querySelector('p.text-text-400.whitespace-nowrap');
-            if (!resetTextEl) return;
-
-            const resetText = resetTextEl.textContent.trim();
-            if (!resetText.match(/resets?\s+(in|sun|mon|tue|wed|thu|fri|sat)/i)) return;
-
-            const barTrack = container.querySelector('div.bg-bg-000.rounded.border.h-4');
-            if (!barTrack) {
-                log('No bar track found in container', idx);
-                return;
+            var m1 = t.match(/in\s+(?:(\d+)\s*hr?)?\s*(?:(\d+)\s*min)?/i);
+            if (m1 && (m1[1] || m1[2])) {
+                hrsUntil = parseInt(m1[1] || 0) + (parseInt(m1[2] || 0) / 60);
+            } else {
+                var m2 = t.match(/(sun|mon|tue|wed|thu|fri|sat)\w*\s+(\d+):(\d+)\s*(am|pm)/i);
+                if (!m2) return;
+                var h = parseInt(m2[2]);
+                if (m2[4].toLowerCase() === 'pm' && h !== 12) h += 12;
+                if (m2[4].toLowerCase() === 'am' && h === 12) h = 0;
+                var di = {sun:0,mon:1,tue:2,wed:3,thu:4,fri:5,sat:6};
+                var rd = di[m2[1].toLowerCase().slice(0,3)];
+                var now = new Date();
+                var reset = new Date();
+                reset.setHours(h, parseInt(m2[3]), 0, 0);
+                var d = rd - now.getDay();
+                if (d < 0) d += 7;
+                if (d === 0 && reset <= now) d = 7;
+                reset.setDate(now.getDate() + d);
+                hrsUntil = (reset - now) / 3600000;
             }
 
-            const windowHours = getWindowHours(container);
-            const hoursUntilReset = parseHoursUntilReset(resetText);
+            var pos = Math.max(0, Math.min(100, ((windowHrs - hrsUntil) / windowHrs) * 100));
 
-            if (hoursUntilReset === null) {
-                log('Could not parse reset time:', resetText);
-                return;
-            }
-
-            const position = calculateReticlePosition(hoursUntilReset, windowHours);
-            log('Container', idx, '- Window:', windowHours + 'hr', '- Reset:', resetText, '- Position:', position.toFixed(1) + '%');
-
-            addReticleToBar(barTrack, position);
+            bar.style.position = 'relative';
+            bar.style.overflow = 'visible';
+            var old = bar.querySelector('.time-reticle');
+            if (old) old.remove();
+            var r = document.createElement('div');
+            r.className = 'time-reticle';
+            r.style.left = pos + '%';
+            var lbl = document.createElement('div');
+            lbl.className = 'time-reticle-label';
+            lbl.textContent = 'NOW';
+            r.appendChild(lbl);
+            bar.appendChild(r);
+            added++;
         });
+
+        return added;
     }
 
-    function init() {
-        log('Initializing Usage Reticle v1.2...');
+    // Initial attempt
+    var count = addReticles();
 
-        setTimeout(processUsageBars, 1000);
-
-        let lastUrl = location.href;
-        const observer = new MutationObserver(() => {
-            if (location.href !== lastUrl) {
-                lastUrl = location.href;
-                setTimeout(processUsageBars, 1000);
+    // Retry if nothing found (page still loading)
+    if (count === 0) {
+        var attempts = 0;
+        var interval = setInterval(function() {
+            attempts++;
+            if (addReticles() > 0 || attempts >= 10) {
+                clearInterval(interval);
             }
-        });
-        observer.observe(document.body, { childList: true, subtree: true });
-
-        setInterval(processUsageBars, 60000);
+        }, 1000);
     }
 
-    init();
+    // Watch for SPA navigation
+    var lastUrl = location.href;
+    new MutationObserver(function() {
+        if (location.href !== lastUrl) {
+            lastUrl = location.href;
+            setTimeout(addReticles, 1000);
+        }
+    }).observe(document.body, {childList: true, subtree: true});
+
 })();
