@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Usage Reticle - Time Parsing Tests</title>
+    <style>
+        body { font-family: monospace; padding: 20px; background: #1a1a1a; color: #fff; }
+        .pass { color: #4ade80; }
+        .fail { color: #f87171; }
+        .test { margin: 10px 0; padding: 10px; background: #2a2a2a; border-radius: 4px; }
+        .result { margin-top: 5px; font-size: 12px; color: #888; }
+        h1 { color: #fff; }
+        h2 { color: #aaa; margin-top: 30px; }
+
+        /* Demo progress bar */
+        .demo-container { margin: 30px 0; }
+        .demo-bar-track {
+            position: relative;
+            width: 100%;
+            height: 24px;
+            background: #333;
+            border-radius: 12px;
+            overflow: visible;
+        }
+        .demo-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #6366f1, #8b5cf6);
+            border-radius: 12px;
+        }
+        .time-reticle {
+            position: absolute;
+            width: 2px;
+            height: 100%;
+            background-color: #ffffff;
+            box-shadow: 0 0 3px rgba(0, 0, 0, 0.8), 0 0 6px rgba(0, 0, 0, 0.4);
+            pointer-events: none;
+            z-index: 1000;
+            top: 0;
+        }
+        .time-reticle::after {
+            content: '';
+            position: absolute;
+            bottom: -6px;
+            left: -3px;
+            width: 0;
+            height: 0;
+            border-left: 4px solid transparent;
+            border-right: 4px solid transparent;
+            border-bottom: 6px solid #ffffff;
+            filter: drop-shadow(0 0 2px rgba(0, 0, 0, 0.5));
+        }
+        .demo-label { color: #888; font-size: 12px; margin-top: 8px; }
+    </style>
+</head>
+<body>
+    <h1>Usage Reticle - Time Parsing Tests</h1>
+    <div id="tests"></div>
+
+    <h2>Visual Demo</h2>
+    <div class="demo-container">
+        <div>Usage: 56% | Target: <span id="target-pct">--</span>%</div>
+        <div class="demo-bar-track" id="demo-bar">
+            <div class="demo-bar-fill" style="width: 56%"></div>
+        </div>
+        <div class="demo-label">Resets Sat 10:59 AM (simulated)</div>
+    </div>
+
+    <script>
+        const HOURS_IN_WEEK = 168;
+
+        function parseResetTime(resetText) {
+            // Handle "Resets in X hr" or "Resets in X min" format
+            const inMatch = resetText.match(/resets?\s+in\s+(\d+)\s*(hr|min|hour|minute)/i);
+            if (inMatch) {
+                const value = parseInt(inMatch[1]);
+                const unit = inMatch[2].toLowerCase();
+                let hoursUntilReset;
+                if (unit.startsWith('min')) {
+                    hoursUntilReset = value / 60;
+                } else {
+                    hoursUntilReset = value;
+                }
+                return HOURS_IN_WEEK - hoursUntilReset;
+            }
+
+            // Handle "Resets Day HH:MM AM/PM" format
+            const dayMatch = resetText.match(/resets?\s+(sun|mon|tue|wed|thu|fri|sat)\w*\s+(\d{1,2}):(\d{2})\s*(am|pm)/i);
+            if (dayMatch) {
+                const dayName = dayMatch[1].toLowerCase().substring(0, 3);
+                let hours = parseInt(dayMatch[2]);
+                const minutes = parseInt(dayMatch[3]);
+                const ampm = dayMatch[4].toLowerCase();
+
+                if (ampm === 'pm' && hours !== 12) hours += 12;
+                if (ampm === 'am' && hours === 12) hours = 0;
+
+                const dayIndex = { sun: 0, mon: 1, tue: 2, wed: 3, thu: 4, fri: 5, sat: 6 };
+                const resetDayOfWeek = dayIndex[dayName];
+
+                const now = new Date();
+                const resetDate = new Date();
+                resetDate.setHours(hours, minutes, 0, 0);
+
+                const currentDay = now.getDay();
+                let daysUntilReset = resetDayOfWeek - currentDay;
+                if (daysUntilReset < 0) daysUntilReset += 7;
+                if (daysUntilReset === 0 && resetDate <= now) daysUntilReset = 7;
+
+                resetDate.setDate(now.getDate() + daysUntilReset);
+
+                const msUntilReset = resetDate - now;
+                const hoursUntilReset = msUntilReset / (1000 * 60 * 60);
+
+                return HOURS_IN_WEEK - hoursUntilReset;
+            }
+
+            return null;
+        }
+
+        function calculatePosition(hoursSinceReset) {
+            if (hoursSinceReset === null) return null;
+            return Math.max(0, Math.min(100, (hoursSinceReset / HOURS_IN_WEEK) * 100));
+        }
+
+        // Tests
+        const tests = [
+            {
+                name: '"Resets in 1 min" → ~167.98 hours elapsed',
+                input: 'Resets in 1 min',
+                validate: (h) => h > 167.9 && h < 168,
+                expected: '~167.98 hours'
+            },
+            {
+                name: '"Resets in 5 hr" → 163 hours elapsed',
+                input: 'Resets in 5 hr',
+                validate: (h) => Math.abs(h - 163) < 0.01,
+                expected: '163 hours'
+            },
+            {
+                name: '"Resets in 24 hr" → 144 hours elapsed',
+                input: 'Resets in 24 hr',
+                validate: (h) => Math.abs(h - 144) < 0.01,
+                expected: '144 hours'
+            },
+            {
+                name: '"Resets in 168 hr" → 0 hours elapsed (full week)',
+                input: 'Resets in 168 hr',
+                validate: (h) => Math.abs(h) < 0.01,
+                expected: '0 hours'
+            },
+            {
+                name: 'Day format parses correctly',
+                input: 'Resets Sat 10:59 AM',
+                validate: (h) => h !== null && h >= 0 && h <= 168,
+                expected: 'Valid hours (0-168)'
+            },
+            {
+                name: 'PM time parsing',
+                input: 'Resets Fri 3:30 PM',
+                validate: (h) => h !== null && h >= 0 && h <= 168,
+                expected: 'Valid hours (0-168)'
+            },
+            {
+                name: 'Invalid input returns null',
+                input: 'garbage text',
+                validate: (h) => h === null,
+                expected: 'null'
+            },
+            {
+                name: 'Position at 50% elapsed = 50%',
+                input: 'Resets in 84 hr',
+                validate: (h) => {
+                    const pos = calculatePosition(h);
+                    return Math.abs(pos - 50) < 0.1;
+                },
+                expected: '50% position'
+            }
+        ];
+
+        const container = document.getElementById('tests');
+        let passed = 0;
+
+        tests.forEach(test => {
+            const result = parseResetTime(test.input);
+            const pass = test.validate(result);
+            if (pass) passed++;
+
+            const div = document.createElement('div');
+            div.className = 'test';
+            div.innerHTML = `
+                <span class="${pass ? 'pass' : 'fail'}">${pass ? '✓' : '✗'}</span>
+                <strong>${test.name}</strong>
+                <div class="result">
+                    Input: "${test.input}"<br>
+                    Result: ${result !== null ? result.toFixed(2) + ' hours' : 'null'}<br>
+                    Expected: ${test.expected}
+                </div>
+            `;
+            container.appendChild(div);
+        });
+
+        // Summary
+        const summary = document.createElement('div');
+        summary.style.marginTop = '20px';
+        summary.style.fontSize = '18px';
+        summary.innerHTML = `<strong class="${passed === tests.length ? 'pass' : 'fail'}">${passed}/${tests.length} tests passed</strong>`;
+        container.appendChild(summary);
+
+        // Visual demo
+        const demoResult = parseResetTime('Resets Sat 10:59 AM');
+        const demoPosition = calculatePosition(demoResult);
+        document.getElementById('target-pct').textContent = demoPosition.toFixed(1);
+
+        const reticle = document.createElement('div');
+        reticle.className = 'time-reticle';
+        reticle.style.left = demoPosition + '%';
+        document.getElementById('demo-bar').appendChild(reticle);
+    </script>
+</body>
+</html>
