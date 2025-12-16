@@ -58,7 +58,7 @@ For example, if your weekly limit resets Saturday at 11 AM and it's currently We
 - The script relies on Claude's current page structure. If Anthropic updates their UI, it may need updating.
 - The bookmarklet runs once per click. Navigate away and back? Click it again.
 
-**Last tested:** December 2024
+**Last tested:** December 2025
 
 ## Files
 
