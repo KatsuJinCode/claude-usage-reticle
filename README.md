@@ -33,7 +33,7 @@ That's it! Click the bookmark whenever you want to see the reticle.
 For automatic running every time you visit the page:
 
 1. Install [Tampermonkey](https://www.tampermonkey.net/) browser extension
-2. **[Click here to install the script](https://github.com/KatsuJinCode/claude-usage-reticle/raw/main/usage-reticle.user.js)** - Tampermonkey will prompt you to install
+2. **[Click here to install the script](https://github.com/KatsuJinCode/claude-usage-reticle/raw/master/usage-reticle.user.js)** - Tampermonkey will prompt you to install
 3. Visit Claude's usage page - the reticle appears automatically
 
 ## How It Works
