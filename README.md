@@ -53,8 +53,6 @@ For automatic running every time you visit the page:
 3. **[Click here to install the script](https://github.com/KatsuJinCode/claude-usage-reticle/raw/main/usage-reticle.user.js)** - Tampermonkey will prompt you to install
 4. Visit [claude.ai/settings/usage](https://claude.ai/settings/usage) - the reticles appear automatically
 
-> **Note**: The Tampermonkey userscript is currently v1.5 and shows the original NOW reticle. The bookmarklet has the latest v2.0 features with time delta and color scaling.
-
 > **Troubleshooting**: If the script installs but nothing appears, check the [Tampermonkey FAQ](https://www.tampermonkey.net/faq.php) for browser-specific setup.
 
 ## How It Works
@@ -97,7 +95,6 @@ Colors range from near-white (small difference) to fully saturated (large differ
 
 - The script relies on Claude's current page structure. If Anthropic updates their UI, it may need updating.
 - The bookmarklet runs once per click. Navigate away and back? Click it again.
-- Tampermonkey version (v1.5) doesn't yet have the v2.0 color scaling features.
 
 **Last tested:** December 2025
 
@@ -106,24 +103,24 @@ Colors range from near-white (small difference) to fully saturated (large differ
 | File | Purpose |
 |------|---------|
 | `bookmarklet.html` | Installation page with drag-to-install button |
-| `usage-reticle.user.js` | Tampermonkey userscript (v1.5) |
+| `usage-reticle.user.js` | Tampermonkey userscript (v2.0) |
 | `test-time-parsing.html` | Unit tests for time calculation |
 | `color-calibrator.html` | Development tool for tuning color scaling |
 
 ## Version History
 
-### v2.0 (Bookmarklet)
-- Added usage time reticle showing equivalent day/time
-- Added delta reticle with time difference and percentage
+### v2.0 (Current)
+- Usage time reticle showing equivalent day/time
+- Delta reticle with time difference and percentage
 - Dynamic color scaling with 35% floor and 2x speed
 - Green overlay for under budget, red glow for over budget
 - Soft shadow text styling for contrast
-- Firefox compatibility with copy-to-clipboard fallback
+- Firefox compatibility with copy-to-clipboard fallback (bookmarklet)
+- SPA navigation support (Tampermonkey)
 
-### v1.5 (Tampermonkey)
+### v1.5 (Legacy)
 - Single NOW reticle showing current time position
 - Basic red marker with triangular arrows
-- SPA navigation support
 
 ## License
 
