@@ -84,9 +84,13 @@
             font-size: 13px;
             align-items: flex-start;
         }
+        .bottom-section .info { display: flex; gap: 30px; flex: 0 0 auto; }
         .bottom-section img {
             border-radius: 6px;
-            max-height: 100px;
+            flex: 1;
+            min-width: 50%;
+            max-width: 60%;
+            height: auto;
         }
         .bottom-section ul { margin: 0; }
 
@@ -138,24 +142,26 @@
     </div>
 
     <div class="bottom-section">
+        <div class="info">
+            <div>
+                <strong>How to read:</strong>
+                <ul>
+                    <li><span style="color:#3b82f6">■</span> <strong>Blue reticle</strong> = your usage position (shows equivalent day/time)</li>
+                    <li><span style="color:#22c55e">■</span> <strong>Green label</strong> = UNDER budget with time + percentage</li>
+                    <li><span style="color:#dc2626">■</span> <strong>Red label</strong> = OVER budget with time + percentage</li>
+                    <li>Color intensity scales with how far off you are</li>
+                </ul>
+            </div>
+            <div>
+                <strong>Notes:</strong>
+                <ul>
+                    <li>Bookmarklet runs once per click</li>
+                    <li>Works with session (5hr) + weekly limits</li>
+                    <li><a href="https://www.tampermonkey.net/faq.php" target="_blank">Tampermonkey FAQ</a></li>
+                </ul>
+            </div>
+        </div>
         <img src="install-preview.png" alt="Usage Reticle Demo">
-        <div>
-            <strong>How to read:</strong>
-            <ul>
-                <li><span style="color:#3b82f6">■</span> <strong>Blue reticle</strong> = your usage position (shows equivalent day/time)</li>
-                <li><span style="color:#22c55e">■</span> <strong>Green label</strong> = UNDER budget with time + percentage</li>
-                <li><span style="color:#dc2626">■</span> <strong>Red label</strong> = OVER budget with time + percentage</li>
-                <li>Color intensity scales with how far off you are</li>
-            </ul>
-        </div>
-        <div>
-            <strong>Notes:</strong>
-            <ul>
-                <li>Bookmarklet runs once per click</li>
-                <li>Works with session (5hr) + weekly limits</li>
-                <li><a href="https://www.tampermonkey.net/faq.php" target="_blank">Tampermonkey FAQ</a></li>
-            </ul>
-        </div>
     </div>
 
     <div class="footer">
