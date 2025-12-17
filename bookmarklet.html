@@ -24,50 +24,9 @@
 
         .demo {
             flex: 1;
-            background: #1a1a1a;
-            padding: 10px 20px;
-            border-radius: 6px;
+            display: flex;
+            justify-content: center;
         }
-        .demo-bar {
-            position: relative;
-            height: 18px;
-            background: #333;
-            border-radius: 4px;
-            border: 1px solid #444;
-            margin: 6px 0;
-        }
-        .demo-fill { height: 100%; background: #3b82f6; border-radius: 4px; }
-        .demo-reticle { position: absolute; width: 2px; height: 100%; top: 0; }
-        .demo-reticle.usage { background: #3b82f6; }
-        .demo-reticle.usage::after {
-            content: ''; position: absolute; left: -3px; bottom: -5px;
-            border-left: 4px solid transparent; border-right: 4px solid transparent;
-            border-bottom: 5px solid #3b82f6;
-        }
-        .demo-reticle.delta { background: hsl(0, 65%, 38%); }
-        .demo-reticle.delta::before {
-            content: ''; position: absolute; left: -3px; top: -5px;
-            border-left: 4px solid transparent; border-right: 4px solid transparent;
-            border-top: 5px solid hsl(0, 65%, 38%);
-        }
-        .demo-label {
-            position: absolute; left: 50%; transform: translateX(-50%);
-            color: white; padding: 2px 6px; border-radius: 3px; font-size: 10px; font-weight: 600;
-        }
-        .demo-label.usage { background: #3b82f6; bottom: -20px; top: auto; }
-        .demo-label.delta {
-            background: hsl(0, 65%, 38%); top: -20px;
-            text-shadow: 0 1px 2px rgba(0,0,0,0.9), 0 0 4px rgba(0,0,0,0.7), 0 0 8px rgba(0,0,0,0.4);
-            border: 1px solid #000;
-        }
-        .demo-glow {
-            position: absolute; top: 0; height: 100%; border-radius: 4px;
-            box-shadow: 0 0 18px 5px hsla(0, 70%, 45%, 0.7);
-        }
-        .demo-overlay { position: absolute; height: 100%; top: 0; border-radius: 4px;
-            background: hsla(0, 70%, 35%, 0.65); }
-        .demo-text { color: #888; font-size: 12px; }
-        .demo-hint { color: #f87171; font-size: 11px; margin-top: 4px; }
 
         .main-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
 
@@ -152,15 +111,7 @@
             <p>See where your usage <em>should</em> be based on time in reset window</p>
         </div>
         <div class="demo">
-            <div class="demo-text">58% used | Resets Sat 10:59 AM</div>
-            <div class="demo-bar">
-                <div class="demo-fill" style="width: 58%"></div>
-                <div class="demo-glow" style="left: 45%; width: 13%"></div>
-                <div class="demo-overlay" style="left: 45%; width: 13%"></div>
-                <div class="demo-reticle delta" style="left: 45%"><div class="demo-label delta">1d 2h OVER (13%)</div></div>
-                <div class="demo-reticle usage" style="left: 58%"><div class="demo-label usage">Fri 3PM</div></div>
-            </div>
-            <div class="demo-hint">↑ 13% over budget (1d 2h) - red glow + overlay, usage equivalent to Fri 3PM</div>
+            <img src="install-preview.png" alt="Usage Reticle Demo" style="max-height: 120px; border-radius: 6px;">
         </div>
     </div>
 
