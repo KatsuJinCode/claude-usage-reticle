@@ -3,244 +3,229 @@
 <head>
     <title>Claude Usage Reticle - Install</title>
     <style>
+        * { box-sizing: border-box; }
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            max-width: 700px;
-            margin: 40px auto;
-            padding: 20px;
-            line-height: 1.6;
-            color: #333;
-        }
-        h1 { color: #dc2626; }
-        h2 { margin-top: 40px; border-bottom: 1px solid #ddd; padding-bottom: 8px; }
-
-        .options {
-            display: flex;
-            gap: 20px;
-            margin: 30px 0;
-        }
-        .option {
-            flex: 1;
-            padding: 20px;
-            border-radius: 8px;
-            border: 2px solid #ddd;
-        }
-        .option.recommended {
-            border-color: #dc2626;
-            background: #fef2f2;
-        }
-        .option h3 {
-            margin-top: 0;
-        }
-        .badge {
-            background: #dc2626;
-            color: white;
-            font-size: 11px;
-            padding: 2px 8px;
-            border-radius: 4px;
-            margin-left: 8px;
-            vertical-align: middle;
-        }
-
-        .install-btn {
-            display: inline-block;
-            background: #dc2626;
-            color: white;
-            padding: 12px 24px;
-            border-radius: 8px;
-            text-decoration: none;
-            font-weight: 600;
-            font-size: 16px;
-            margin: 10px 0;
-        }
-        .install-btn:hover {
-            background: #b91c1c;
-        }
-        .install-btn.secondary {
-            background: #6b7280;
-        }
-        .install-btn.secondary:hover {
-            background: #4b5563;
-        }
-
-        .bookmarklet-link {
-            display: inline-block;
-            background: #dc2626;
-            color: white;
-            padding: 12px 24px;
-            border-radius: 8px;
-            text-decoration: none;
-            font-weight: 600;
-            font-size: 16px;
-            margin: 10px 0;
-            cursor: grab;
-        }
-        .bookmarklet-link:hover {
-            background: #b91c1c;
-        }
-
-        .instructions {
-            background: #f5f5f5;
-            padding: 16px 20px;
-            border-radius: 8px;
-            margin: 15px 0;
-        }
-        .instructions ol {
             margin: 0;
-            padding-left: 20px;
+            padding: 15px 25px;
+            line-height: 1.4;
+            color: #333;
+            font-size: 14px;
         }
-        .instructions li {
-            margin: 8px 0;
-        }
+        h1 { color: #D97706; margin: 0 0 3px 0; font-size: 1.5em; }
+        h2 { margin: 0 0 8px 0; font-size: 1em; }
+        p { margin: 4px 0; }
+        ol, ul { margin: 4px 0; padding-left: 18px; }
+        li { margin: 2px 0; }
+
+        .header { display: flex; gap: 30px; align-items: center; margin-bottom: 15px; }
+        .header-text { flex: 0 0 auto; }
+        .header-text p { color: #666; margin: 0; font-size: 13px; }
 
         .demo {
+            flex: 1;
             background: #1a1a1a;
-            padding: 20px;
-            border-radius: 8px;
-            margin: 30px 0;
+            padding: 10px 20px;
+            border-radius: 6px;
         }
         .demo-bar {
             position: relative;
-            height: 16px;
+            height: 18px;
             background: #333;
             border-radius: 4px;
             border: 1px solid #444;
-            margin: 10px 0;
-            overflow: visible;
+            margin: 6px 0;
         }
-        .demo-fill {
-            height: 100%;
-            background: #3b82f6;
-            border-radius: 4px;
-        }
-        .demo-reticle {
-            position: absolute;
-            width: 2px;
-            height: 100%;
-            background: #dc2626;
-            top: 0;
-        }
+        .demo-fill { height: 100%; background: #3b82f6; border-radius: 4px; }
+        .demo-reticle { position: absolute; width: 2px; height: 100%; background: #dc2626; top: 0; }
         .demo-label {
-            position: absolute;
-            top: -18px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: #dc2626;
-            color: white;
-            padding: 1px 4px;
-            border-radius: 2px;
-            font-size: 9px;
-            font-weight: 600;
+            position: absolute; top: -18px; left: 50%; transform: translateX(-50%);
+            background: #dc2626; color: white; padding: 2px 6px; border-radius: 3px; font-size: 10px; font-weight: 600;
         }
-        .demo-text {
+        .demo-text { color: #888; font-size: 12px; }
+        .demo-hint { color: #f87171; font-size: 11px; margin-top: 4px; }
+
+        .main-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+
+        .card {
+            border-radius: 6px;
+            padding: 12px;
+            border: 2px solid #3b82f6;
+            background: #eff6ff;
+        }
+        .card.yellow {
+            border-color: #D97706;
+            background: #FFFBEB;
+        }
+        .card h2 { border-bottom: 1px solid rgba(0,0,0,0.1); padding-bottom: 5px; }
+        .card.yellow .badge { background: #D97706; }
+
+        .badge {
+            background: #3b82f6; color: white; font-size: 10px;
+            padding: 2px 6px; border-radius: 3px; margin-left: 6px;
+        }
+
+        .setup-box {
+            background: #fef2f2;
+            border: 1px solid #dc2626;
+            border-radius: 5px;
+            padding: 8px 10px;
+            margin: 8px 0;
+            font-size: 12px;
+        }
+        .setup-box strong { color: #dc2626; }
+
+        .btn {
+            display: inline-block;
+            padding: 8px 14px;
+            border-radius: 5px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 13px;
+            border: none;
+            cursor: pointer;
+            color: white;
+        }
+        .btn-blue { background: #3b82f6; }
+        .btn-blue:hover { background: #2563eb; }
+        .btn-green { background: #16a34a; }
+        .btn-green:hover { background: #15803d; }
+        .btn-gray { background: #9ca3af; color: #fff; }
+        .btn-gray:hover { background: #6b7280; }
+        .btn.copied { background: #16a34a; }
+
+        .bookmarklet-row { display: flex; gap: 8px; align-items: center; margin: 8px 0; flex-wrap: wrap; }
+        .drag-hint { font-size: 12px; color: #16a34a; margin-top: 6px; padding: 6px 8px; border-radius: 4px; background: #f0fdf4; }
+        .drag-hint.firefox { background: #fef2f2; color: #991b1b; }
+        .drag-hint.muted { color: #9ca3af; background: transparent; }
+
+        .how-to-read {
+            margin-top: 12px;
+            padding-top: 10px;
+            border-top: 1px solid #ddd;
+            display: flex;
+            gap: 30px;
+            font-size: 13px;
+        }
+        .how-to-read ul { margin: 0; }
+
+        .footer {
+            margin-top: 10px;
+            padding-top: 8px;
+            border-top: 1px solid #ddd;
             color: #888;
             font-size: 12px;
         }
+        .footer a { color: #666; }
 
-        .note {
-            background: #fef3c7;
-            border-left: 4px solid #f59e0b;
-            padding: 12px 16px;
-            margin: 20px 0;
-        }
+        code { background: #e5e5e5; padding: 1px 4px; border-radius: 3px; font-size: 11px; }
     </style>
 </head>
 <body>
-    <h1>Claude Usage Reticle</h1>
-    <p>A visual marker showing where your Claude usage <em>should</em> be based on time elapsed in the reset window.</p>
-
-    <div class="demo">
-        <div class="demo-text">58% used | Resets Sat 10:59 AM</div>
-        <div class="demo-bar">
-            <div class="demo-fill" style="width: 58%"></div>
-            <div class="demo-reticle" style="left: 45%">
-                <div class="demo-label">NOW</div>
-            </div>
+    <div class="header">
+        <div class="header-text">
+            <h1>Claude Usage Reticle</h1>
+            <p>See where your usage <em>should</em> be based on time in reset window</p>
         </div>
-        <div class="demo-text" style="color: #f87171;">↑ Usage ahead of reticle = over budget, slow down</div>
+        <div class="demo">
+            <div class="demo-text">58% used | Resets Sat 10:59 AM</div>
+            <div class="demo-bar">
+                <div class="demo-fill" style="width: 58%"></div>
+                <div class="demo-reticle" style="left: 45%"><div class="demo-label">NOW</div></div>
+            </div>
+            <div class="demo-hint">↑ Bar ahead of reticle = over budget, slow down</div>
+        </div>
     </div>
 
-    <h2>Choose Your Install Method</h2>
-
-    <div class="options">
-        <div class="option recommended">
-            <h3>Tampermonkey <span class="badge">Recommended</span></h3>
+    <div class="main-grid">
+        <div class="card">
+            <h2>Option 1: Tampermonkey <span class="badge">Recommended</span></h2>
             <p>Auto-runs every time you visit the usage page.</p>
             <ol>
                 <li>Install <a href="https://www.tampermonkey.net/" target="_blank">Tampermonkey</a></li>
-                <li><strong>Enable script injection</strong> (<a href="#enable-scripts">see below</a>)</li>
-                <li>Click the button below</li>
+                <li>Enable script injection (see below)</li>
+                <li>Click: <a class="btn btn-blue" href="https://github.com/KatsuJinCode/claude-usage-reticle/raw/main/usage-reticle.user.js">Install Script</a></li>
             </ol>
-            <a class="install-btn" href="https://github.com/KatsuJinCode/claude-usage-reticle/raw/main/usage-reticle.user.js">Install Script</a>
-            <p style="font-size: 13px; color: #666; margin-bottom: 0;">Tampermonkey will prompt you to install.</p>
+            <div class="setup-box">
+                <strong>⚠️ Chrome/Edge setup required:</strong><br>
+                <strong>v138+:</strong> Right-click Tampermonkey → Manage Extension → Enable "Allow User Scripts"<br>
+                <strong>Older:</strong> <code>chrome://extensions</code> → Enable Developer Mode<br>
+                <span style="color: #666;">Firefox/Safari: No setup needed</span>
+            </div>
         </div>
-        <div class="option">
-            <h3>Bookmarklet</h3>
-            <p>No extension needed. Click to run manually.</p>
-            <ol>
-                <li>Drag button below to bookmarks bar</li>
-                <li>Click it when on Usage page</li>
-            </ol>
-            <a class="install-btn secondary" href="#bookmarklet">See Below ↓</a>
+
+        <div class="card yellow">
+            <h2>Option 2: Bookmarklet</h2>
+            <p>No extension needed. Click manually each time.</p>
+            <div class="bookmarklet-row">
+                <a class="btn" id="drag-btn" href="javascript:(function(){if(!location.href.includes(%22claude.ai%22)){alert(%22Go to claude.ai/settings/usage first!%22);return}var s=document.createElement(%22style%22);s.textContent=%22.time-reticle{position:absolute;width:2px;height:100%25;background:%23dc2626;box-shadow:0 0 2px rgba(0,0,0,.5);pointer-events:none;z-index:10;top:0}.time-reticle::before,.time-reticle::after{content:'';position:absolute;left:-3px;width:0;height:0;border-left:4px solid transparent;border-right:4px solid transparent}.time-reticle::before{top:-5px;border-top:5px solid %23dc2626}.time-reticle::after{bottom:-5px;border-bottom:5px solid %23dc2626}.time-reticle-label{position:absolute;top:-20px;left:50%25;transform:translateX(-50%25);background:%23dc2626;color:%23fff;padding:1px 4px;border-radius:2px;font-size:9px;font-weight:600;white-space:nowrap}%22;document.head.appendChild(s);var n=0;document.querySelectorAll(%22div.flex.flex-row.gap-x-8.justify-between.items-center%22).forEach(function(c){var p=c.querySelector(%22p.text-text-400.whitespace-nowrap%22);if(!p)return;var t=p.textContent;var titleEl=c.querySelector(%22p.text-text-100%22);var isSession=titleEl%26%26titleEl.textContent.toLowerCase().includes(%22current session%22);var windowHrs=isSession?5:168;var hrsUntil;var m1=t.match(/in\s+(?:(\d+)\s*hr?)?\s*(?:(\d+)\s*min)?/i);if(m1%26%26(m1[1]||m1[2])){hrsUntil=parseInt(m1[1]||0)+(parseInt(m1[2]||0)/60)}else{var m2=t.match(/(sun|mon|tue|wed|thu|fri|sat)\w*\s+(\d+):(\d+)\s*(am|pm)/i);if(!m2)return;var h=parseInt(m2[2]);if(m2[4].toLowerCase()===%22pm%22%26%26h!==12)h+=12;if(m2[4].toLowerCase()===%22am%22%26%26h===12)h=0;var di={sun:0,mon:1,tue:2,wed:3,thu:4,fri:5,sat:6};var rd=di[m2[1].toLowerCase().slice(0,3)];var now=new Date();var reset=new Date();reset.setHours(h,parseInt(m2[3]),0,0);var d=rd-now.getDay();if(d<0)d+=7;if(d===0%26%26reset<=now)d=7;reset.setDate(now.getDate()+d);hrsUntil=(reset-now)/3600000}var pos=Math.max(0,Math.min(100,((windowHrs-hrsUntil)/windowHrs)*100));var bar=c.querySelector(%22div.bg-bg-000.rounded.border.h-4%22);if(bar){bar.style.position=%22relative%22;bar.style.overflow=%22visible%22;var old=bar.querySelector(%22.time-reticle%22);if(old)old.remove();var r=document.createElement(%22div%22);r.className=%22time-reticle%22;r.style.left=pos+%22%25%22;var lbl=document.createElement(%22div%22);lbl.className=%22time-reticle-label%22;lbl.textContent=%22NOW%22;r.appendChild(lbl);bar.appendChild(r);n++}})})();">📍 Drag Me</a>
+                <button class="btn" id="copy-btn" onclick="copyBookmarklet()">📋 Copy</button>
+            </div>
+            <div id="drag-hint" class="drag-hint"></div>
+            <p style="font-size: 12px; color: #666; margin-top: 6px;">Then go to <a href="https://claude.ai/settings/usage" target="_blank">claude.ai/settings/usage</a> and click the bookmark</p>
         </div>
     </div>
 
-    <h2 id="enable-scripts">⚠️ Enable Script Injection (Required for Chrome/Edge)</h2>
-
-    <div class="note" style="background: #fee2e2; border-color: #dc2626;">
-        <strong>Important:</strong> Chrome and Edge require additional setup for Tampermonkey to inject scripts. Without this, the extension installs but scripts won't run.
+    <div class="how-to-read">
+        <div>
+            <strong>How to read:</strong>
+            <ul>
+                <li>Bar behind reticle → Under budget</li>
+                <li>Bar ahead of reticle → Over budget</li>
+                <li>Bar at reticle → Perfect pacing</li>
+            </ul>
+        </div>
+        <div>
+            <strong>Notes:</strong>
+            <ul>
+                <li>Bookmarklet runs once per click</li>
+                <li>Works with session + weekly limits</li>
+                <li><a href="https://www.tampermonkey.net/faq.php" target="_blank">Tampermonkey FAQ</a></li>
+            </ul>
+        </div>
     </div>
 
-    <h3>Chrome / Edge (v138+)</h3>
-    <ol>
-        <li>Right-click the Tampermonkey icon in your toolbar</li>
-        <li>Select <strong>"Manage Extension"</strong></li>
-        <li>Enable the <strong>"Allow User Scripts"</strong> toggle</li>
-    </ol>
-
-    <h3>Chrome / Edge (older versions)</h3>
-    <ol>
-        <li>Go to <code>chrome://extensions</code> or <code>edge://extensions</code></li>
-        <li>Enable <strong>Developer Mode</strong> (toggle in top-right corner)</li>
-    </ol>
-
-    <h3>Firefox / Safari</h3>
-    <p>No additional setup needed. Scripts run automatically after installation.</p>
-
-    <p style="font-size: 13px; color: #666;">
-        For detailed troubleshooting, see the <a href="https://www.tampermonkey.net/faq.php" target="_blank">official Tampermonkey FAQ</a>.
-    </p>
-
-    <h2 id="bookmarklet">Bookmarklet Installation</h2>
-
-    <p><strong>Drag this button</strong> to your bookmarks bar:</p>
-
-    <!-- BOOKMARKLET LINK -->
-    <a class="bookmarklet-link" href="javascript:(function(){if(!location.href.includes('claude.ai')){alert('Go to claude.ai/settings first!');return}const s=document.createElement('style');s.textContent='.time-reticle{position:absolute;width:2px;height:100%;background:%23dc2626;box-shadow:0 0 2px rgba(0,0,0,.5);pointer-events:none;z-index:10;top:0}.time-reticle::before,.time-reticle::after{content:\"\";position:absolute;left:-3px;width:0;height:0;border-left:4px solid transparent;border-right:4px solid transparent}.time-reticle::before{top:-5px;border-top:5px solid %23dc2626}.time-reticle::after{bottom:-5px;border-bottom:5px solid %23dc2626}.time-reticle-label{position:absolute;top:-20px;left:50%;transform:translateX(-50%);background:%23dc2626;color:%23fff;padding:1px 4px;border-radius:2px;font-size:9px;font-weight:600;white-space:nowrap}';document.head.appendChild(s);let n=0;document.querySelectorAll('div.flex.flex-row.gap-x-8.justify-between.items-center').forEach(c=>{const p=c.querySelector('p.text-text-400.whitespace-nowrap');if(!p)return;const t=p.textContent;const titleEl=c.querySelector('p.text-text-100');const isSession=titleEl%26%26titleEl.textContent.toLowerCase().includes('current session');const windowHrs=isSession?5:168;let hrsUntil;const m1=t.match(/in\s+(?:(\d+)\s*hr?)?\s*(?:(\d+)\s*min)?/i);if(m1%26%26(m1[1]||m1[2])){hrsUntil=parseInt(m1[1]||0)+(parseInt(m1[2]||0)/60)}else{const m2=t.match(/(sun|mon|tue|wed|thu|fri|sat)\w*\s+(\d+):(\d+)\s*(am|pm)/i);if(!m2)return;let h=parseInt(m2[2]);if(m2[4].toLowerCase()==='pm'%26%26h!==12)h+=12;if(m2[4].toLowerCase()==='am'%26%26h===12)h=0;const di={sun:0,mon:1,tue:2,wed:3,thu:4,fri:5,sat:6};const rd=di[m2[1].toLowerCase().slice(0,3)];const now=new Date();const reset=new Date();reset.setHours(h,parseInt(m2[3]),0,0);let d=rd-now.getDay();if(d<0)d+=7;if(d===0%26%26reset<=now)d=7;reset.setDate(now.getDate()+d);hrsUntil=(reset-now)/3600000}const pos=Math.max(0,Math.min(100,((windowHrs-hrsUntil)/windowHrs)*100));const bar=c.querySelector('div.bg-bg-000.rounded.border.h-4');if(bar){bar.style.position='relative';bar.style.overflow='visible';const old=bar.querySelector('.time-reticle');if(old)old.remove();const r=document.createElement('div');r.className='time-reticle';r.style.left=pos+'%25';const lbl=document.createElement('div');lbl.className='time-reticle-label';lbl.textContent='NOW';r.appendChild(lbl);bar.appendChild(r);n++}});alert(n?'Added '+n+' reticle(s)!':'No usage bars found - make sure you are on Settings > Usage')})();">📍 Usage Reticle</a>
-
-    <div class="instructions">
-        <ol>
-            <li>Go to <a href="https://claude.ai/settings" target="_blank">claude.ai/settings</a> → <strong>Usage</strong></li>
-            <li><strong>Click the bookmark</strong> you just created</li>
-            <li>Red "NOW" markers appear on your usage bars!</li>
-        </ol>
+    <div class="footer">
+        <a href="https://github.com/KatsuJinCode/claude-usage-reticle" target="_blank">GitHub</a> · Made for the Claude community. Not affiliated with Anthropic.
     </div>
 
-    <div class="note">
-        <strong>Note:</strong> The bookmarklet runs once per click. If you navigate away and come back, just click it again.
-    </div>
+    <script>
+        var ua = navigator.userAgent;
+        var isFirefox = ua.includes('Firefox');
+        var isChrome = ua.includes('Chrome') || ua.includes('Edg/');
 
-    <h2>How to Read It</h2>
-    <ul>
-        <li><strong>Bar behind reticle</strong> → Under budget, you have capacity</li>
-        <li><strong>Bar ahead of reticle</strong> → Over budget, slow down</li>
-        <li><strong>Bar at reticle</strong> → Perfect pacing</li>
-    </ul>
+        var dragBtn = document.getElementById('drag-btn');
+        var copyBtn = document.getElementById('copy-btn');
+        var dragHint = document.getElementById('drag-hint');
 
-    <hr style="margin: 40px 0; border: none; border-top: 1px solid #ddd;">
-    <p style="color: #888; font-size: 14px;">
-        <a href="https://github.com/KatsuJinCode/claude-usage-reticle" target="_blank">View on GitHub</a> ·
-        Made for the Claude community. Not affiliated with Anthropic.
-    </p>
+        if (isFirefox) {
+            dragBtn.className = 'btn btn-gray';
+            dragBtn.style.cursor = 'not-allowed';
+            copyBtn.className = 'btn btn-green';
+            dragHint.className = 'drag-hint firefox';
+            dragHint.innerHTML = '🦊 <strong>Firefox detected:</strong> Drag doesn\'t work here. Click <strong>Copy</strong>, then create a new bookmark and paste as the URL.';
+        } else if (isChrome) {
+            dragBtn.className = 'btn btn-green';
+            dragBtn.style.cursor = 'grab';
+            copyBtn.className = 'btn btn-gray';
+            dragHint.innerHTML = '🌐 <strong>Chrome detected:</strong> Just drag this button up to your bookmarks bar!';
+        } else {
+            dragBtn.className = 'btn btn-blue';
+            dragBtn.style.cursor = 'grab';
+            copyBtn.className = 'btn btn-blue';
+            dragHint.innerHTML = 'Drag to bookmarks bar, or Copy → create bookmark → paste as URL';
+            dragHint.className = 'drag-hint muted';
+        }
+
+        function copyBookmarklet() {
+            var btn = document.getElementById('copy-btn');
+            var code = document.getElementById('drag-btn').getAttribute('href');
+            navigator.clipboard.writeText(code).then(function() {
+                btn.textContent = '✓ Copied!';
+                btn.classList.add('copied');
+                setTimeout(function() { btn.textContent = '📋 Copy'; btn.classList.remove('copied'); }, 2000);
+            });
+        }
+    </script>
 </body>
 </html>
