@@ -22,8 +22,9 @@ Works with all three usage types:
 ### Option 1: Bookmarklet (Easiest - No Install)
 
 1. Visit the **[installation page](https://katsujincode.github.io/claude-usage-reticle/bookmarklet.html)**
-2. Drag the red button to your bookmarks bar
-3. Go to [claude.ai/settings](https://claude.ai/settings) → Usage
+2. **Chrome/Edge**: Drag the button to your bookmarks bar
+   **Firefox**: Click Copy, create a new bookmark, paste as URL
+3. Go to [claude.ai/settings/usage](https://claude.ai/settings/usage)
 4. Click the bookmark
 
 That's it! Click the bookmark whenever you want to see the reticle.
@@ -38,7 +39,7 @@ For automatic running every time you visit the page:
    - **Older Chrome/Edge**: Go to `chrome://extensions` → Enable "Developer Mode" (top-right toggle)
    - **Firefox/Safari**: No extra setup needed
 3. **[Click here to install the script](https://github.com/KatsuJinCode/claude-usage-reticle/raw/main/usage-reticle.user.js)** - Tampermonkey will prompt you to install
-4. Visit Claude's usage page - the reticle appears automatically
+4. Visit [claude.ai/settings/usage](https://claude.ai/settings/usage) - the reticle appears automatically
 
 > **Troubleshooting**: If the script installs but nothing appears, check the [Tampermonkey FAQ](https://www.tampermonkey.net/faq.php) for browser-specific setup.
 
