@@ -203,6 +203,9 @@
         }, 1000);
     }
 
+    // Auto-refresh every minute to keep positions current
+    setInterval(addReticles, 60000);
+
     // Watch for SPA navigation
     var lastUrl = location.href;
     new MutationObserver(function() {
