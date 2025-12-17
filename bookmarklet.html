@@ -18,15 +18,8 @@
         ol, ul { margin: 4px 0; padding-left: 18px; }
         li { margin: 2px 0; }
 
-        .header { display: flex; gap: 30px; align-items: center; margin-bottom: 15px; }
-        .header-text { flex: 0 0 auto; }
-        .header-text p { color: #666; margin: 0; font-size: 13px; }
-
-        .demo {
-            flex: 1;
-            display: flex;
-            justify-content: center;
-        }
+        .header { text-align: center; margin-bottom: 15px; }
+        .header p { color: #666; margin: 4px 0 0 0; font-size: 13px; }
 
         .main-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
 
@@ -82,15 +75,20 @@
         .drag-hint.firefox { background: #fef2f2; color: #991b1b; }
         .drag-hint.muted { color: #9ca3af; background: transparent; }
 
-        .how-to-read {
+        .bottom-section {
             margin-top: 12px;
             padding-top: 10px;
             border-top: 1px solid #ddd;
             display: flex;
-            gap: 30px;
+            gap: 20px;
             font-size: 13px;
+            align-items: flex-start;
         }
-        .how-to-read ul { margin: 0; }
+        .bottom-section img {
+            border-radius: 6px;
+            max-height: 100px;
+        }
+        .bottom-section ul { margin: 0; }
 
         .footer {
             margin-top: 10px;
@@ -106,13 +104,8 @@
 </head>
 <body>
     <div class="header">
-        <div class="header-text">
-            <h1>Claude Usage Reticle</h1>
-            <p>See where your usage <em>should</em> be based on time in reset window</p>
-        </div>
-        <div class="demo">
-            <img src="install-preview.png" alt="Usage Reticle Demo" style="max-height: 120px; border-radius: 6px;">
-        </div>
+        <h1>Claude Usage Reticle</h1>
+        <p>See where your usage <em>should</em> be based on time in reset window</p>
     </div>
 
     <div class="main-grid">
@@ -144,7 +137,8 @@
         </div>
     </div>
 
-    <div class="how-to-read">
+    <div class="bottom-section">
+        <img src="install-preview.png" alt="Usage Reticle Demo">
         <div>
             <strong>How to read:</strong>
             <ul>
