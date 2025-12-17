@@ -118,15 +118,28 @@
             <p>Auto-runs every time you visit the usage page.</p>
             <ol>
                 <li>Install <a href="https://www.tampermonkey.net/" target="_blank">Tampermonkey</a></li>
-                <li>Enable script injection (see below)</li>
-                <li>Click: <a class="btn btn-blue" href="https://greasyfork.org/en/scripts/559145-claude-usage-reticle" target="_blank">Install from Greasy Fork</a></li>
+                <li>Enable script injection (see setup box below)</li>
+                <li>Try one of these install methods:</li>
             </ol>
+            <div style="display: flex; gap: 8px; margin: 8px 0 8px 18px;">
+                <a class="btn btn-blue" href="https://greasyfork.org/en/scripts/559145-claude-usage-reticle" target="_blank">Greasy Fork</a>
+                <a class="btn btn-blue" href="https://github.com/KatsuJinCode/claude-usage-reticle/raw/main/usage-reticle.user.js">Raw File</a>
+            </div>
             <div class="setup-box">
                 <strong>⚠️ Chrome/Edge setup required:</strong><br>
                 <strong>v138+:</strong> Right-click Tampermonkey → Manage Extension → Enable "Allow User Scripts"<br>
                 <strong>Older:</strong> <code>chrome://extensions</code> → Enable Developer Mode<br>
                 <span style="color: #666;">Firefox/Safari: No setup needed</span>
             </div>
+            <details style="font-size: 12px; margin-top: 8px;">
+                <summary style="cursor: pointer; color: #666;">Links not working? Manual install</summary>
+                <ol style="margin: 6px 0; padding-left: 18px;">
+                    <li>Click Tampermonkey icon → <strong>Create a new script</strong></li>
+                    <li>Delete the template code</li>
+                    <li>Copy code from <a href="https://raw.githubusercontent.com/KatsuJinCode/claude-usage-reticle/main/usage-reticle.user.js" target="_blank">here</a> and paste</li>
+                    <li>Press Ctrl+S to save</li>
+                </ol>
+            </details>
         </div>
 
         <div class="card yellow">

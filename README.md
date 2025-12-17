@@ -50,8 +50,12 @@ For automatic running every time you visit the page:
    - **Chrome/Edge v138+**: Right-click Tampermonkey icon > "Manage Extension" > Enable "Allow User Scripts"
    - **Older Chrome/Edge**: Go to `chrome://extensions` > Enable "Developer Mode" (top-right toggle)
    - **Firefox/Safari**: No extra setup needed
-3. **[Install from Greasy Fork](https://greasyfork.org/en/scripts/559145-claude-usage-reticle)** - Tampermonkey will prompt you to install
+3. Try one of these install methods:
+   - **[Install from Greasy Fork](https://greasyfork.org/en/scripts/559145-claude-usage-reticle)**
+   - **[Install from Raw File](https://github.com/KatsuJinCode/claude-usage-reticle/raw/main/usage-reticle.user.js)**
 4. Visit [claude.ai/settings/usage](https://claude.ai/settings/usage) - the reticles appear automatically
+
+> **Links not working?** Manual install: Click Tampermonkey icon → "Create a new script" → Delete template → Copy code from [here](https://raw.githubusercontent.com/KatsuJinCode/claude-usage-reticle/main/usage-reticle.user.js) → Paste → Ctrl+S to save
 
 > **Troubleshooting**: If the script installs but nothing appears, check the [Tampermonkey FAQ](https://www.tampermonkey.net/faq.php) for browser-specific setup.
 
