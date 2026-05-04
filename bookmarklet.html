@@ -130,7 +130,7 @@
 
         .card-grid {
             display: grid;
-            grid-template-columns: repeat(2, minmax(0, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
             gap: 1rem;
         }
         .card {
@@ -356,8 +356,8 @@
         <nav class="main-nav">
             <div class="nav-container">
                 <a href="https://claude.ai/settings/usage" class="nav-link nav-primary" target="_blank">Open Claude Usage</a>
-                <a href="https://github.com/NemesisHubris/claude-usage-reticle/archive/refs/heads/main.zip" class="nav-link nav-ai">Download Extension</a>
-                <a href="https://github.com/NemesisHubris/claude-usage-reticle" class="nav-link" target="_blank">GitHub</a>
+                <a href="https://github.com/KatsuJinCode/claude-usage-reticle/archive/refs/heads/main.zip" class="nav-link nav-ai">Download Extension</a>
+                <a href="https://github.com/KatsuJinCode/claude-usage-reticle" class="nav-link" target="_blank">GitHub</a>
             </div>
         </nav>
 
@@ -368,30 +368,40 @@
                     <div class="card-title">Chrome Extension</div>
                     <span class="badge">Recommended</span>
                 </div>
-                <div class="card-desc">Auto-runs on Claude Usage with no script manager required. Settings live in the extension popup, not inside Claude.</div>
+                <div class="card-desc">Auto-runs on Claude Usage with no script manager required. Settings live in the extension popup.</div>
                 <ol>
-                    <li><a href="https://github.com/NemesisHubris/claude-usage-reticle/archive/refs/heads/main.zip">Download the project ZIP</a> from GitHub.</li>
-                    <li>Unzip it and keep the folder somewhere stable.</li>
-                    <li>Open <code>chrome://extensions</code>, enable <strong>Developer mode</strong>, then click <strong>Load unpacked</strong>.</li>
-                    <li>Select the unzipped <code>extension</code> folder.</li>
-                    <li>Open <a href="https://claude.ai/settings/usage" target="_blank">claude.ai/settings/usage</a>.</li>
+                    <li><a href="https://github.com/KatsuJinCode/claude-usage-reticle/archive/refs/heads/main.zip">Download ZIP</a> and unzip it.</li>
+                    <li>Open <code>chrome://extensions</code>, enable <strong>Developer mode</strong>.</li>
+                    <li>Click <strong>Load unpacked</strong> and select the <code>extension</code> folder.</li>
                 </ol>
                 <div class="action-row">
-                    <a class="btn btn-blue" href="https://github.com/NemesisHubris/claude-usage-reticle/archive/refs/heads/main.zip">Download ZIP</a>
-                    <a class="btn btn-blue" href="https://github.com/NemesisHubris/claude-usage-reticle/tree/main/extension" target="_blank">View Extension</a>
+                    <a class="btn btn-blue" href="https://github.com/KatsuJinCode/claude-usage-reticle/archive/refs/heads/main.zip">Download ZIP</a>
                 </div>
-                <div class="setup-box">
-                    <strong>Chrome/Edge/Brave:</strong> use <code>chrome://extensions</code> -> Developer mode -> Load unpacked.<br>
-                    <strong>Firefox testing:</strong> use <code>about:debugging#/runtime/this-firefox</code> -> Load Temporary Add-on -> select <code>extension/manifest.json</code>.
+                <div class="setup-box" style="font-size: 0.8rem;">
+                    <strong>Chrome/Edge/Brave:</strong> use Developer mode -> Load unpacked.<br>
+                    <strong>Firefox:</strong> use <code>about:debugging</code> -> Load Temporary Add-on.
                 </div>
-                <details>
-                    <summary>Updating the extension</summary>
-                    <ol style="margin-top: 0.7rem;">
-                        <li>Download the latest ZIP.</li>
-                        <li>Replace your local project folder.</li>
-                        <li>Go back to <code>chrome://extensions</code> and click the reload button on Claude Usage Reticle.</li>
-                    </ol>
-                </details>
+            </section>
+
+            <section class="card">
+                <div class="card-header">
+                    <div class="card-title">Tampermonkey</div>
+                    <span class="badge" style="background: #3b82f6;">Auto-runs</span>
+                </div>
+                <div class="card-desc">Auto-runs every time you visit the page using a script manager.</div>
+                <ol>
+                    <li>Install <a href="https://www.tampermonkey.net/" target="_blank">Tampermonkey</a>.</li>
+                    <li>Enable "Allow User Scripts" in extension settings.</li>
+                    <li>Install the script via Greasy Fork or Raw File.</li>
+                </ol>
+                <div class="action-row">
+                    <a class="btn btn-blue" href="https://greasyfork.org/en/scripts/559145-claude-usage-reticle" target="_blank">Greasy Fork</a>
+                    <a class="btn btn-blue" href="https://github.com/KatsuJinCode/claude-usage-reticle/raw/main/usage-reticle.user.js">Raw File</a>
+                </div>
+                <div class="setup-box" style="font-size: 0.8rem;">
+                    <strong>Chrome v138+:</strong> Manage Extension -> Enable "Allow User Scripts".<br>
+                    <strong>Older:</strong> Enable Developer Mode in <code>chrome://extensions</code>.
+                </div>
             </section>
 
             <section class="card card--accent">
@@ -399,14 +409,14 @@
                     <div class="card-title">Bookmarklet</div>
                     <span class="badge">No Extension</span>
                 </div>
-                <div class="card-desc">Click once whenever you want the overlay. Good for locked-down browsers or quick one-off use.</div>
+                <div class="card-desc">Click once whenever you want the overlay. Good for locked-down browsers.</div>
                 <div class="bookmarklet-row">
                     <a class="btn btn-gray" id="drag-btn" href="#" aria-disabled="true">Loading...</a>
                     <button class="btn btn-blue" id="copy-btn" onclick="copyBookmarklet()">Copy</button>
                 </div>
                 <div id="drag-hint" class="drag-hint"></div>
-                <div class="setup-box">
-                    Drag this button to your bookmarks bar or copy it into a new bookmark, then open <a href="https://claude.ai/settings/usage" target="_blank">claude.ai/settings/usage</a> and click it.
+                <div class="setup-box" style="font-size: 0.8rem;">
+                    Drag this button to your bookmarks bar or copy it into a new bookmark, then click it on Claude Usage.
                 </div>
             </section>
         </div>
@@ -449,7 +459,7 @@
         </div>
 
         <div class="footer">
-            <a href="https://github.com/NemesisHubris/claude-usage-reticle" target="_blank">GitHub</a> · Made for the Claude community. Not affiliated with Anthropic.
+            <a href="https://github.com/KatsuJinCode/claude-usage-reticle" target="_blank">GitHub</a> · Made for the Claude community. Not affiliated with Anthropic.
         </div>
     </div>
 
@@ -732,7 +742,10 @@
     }
 
     function addReticles() {
-        if (!/claude\.ai/.test(location.hostname) || !/\/settings\/usage/.test(location.pathname)) return 0;
+        if (!/claude\.ai/.test(location.hostname) || !/\/settings\/usage/.test(location.pathname)) {
+            alert("Go to claude.ai/settings/usage first!");
+            return 0;
+        }
         var added = 0;
         document.querySelectorAll('div[role="progressbar"][aria-label="Usage"][aria-valuenow]').forEach(function(bar) {
             var found = findBlock(bar);

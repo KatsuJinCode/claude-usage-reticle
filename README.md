@@ -38,7 +38,7 @@ The Chrome extension also supports optional custom windows for weekly bars, such
 
 For automatic running with no script manager required:
 
-1. Download the project ZIP from [GitHub](https://github.com/NemesisHubris/claude-usage-reticle/archive/refs/heads/main.zip), or clone the repo locally
+1. Download the project ZIP from [GitHub](https://github.com/KatsuJinCode/claude-usage-reticle/archive/refs/heads/main.zip), or clone the repo locally
 2. Unzip it and keep the folder somewhere stable
 3. Open `chrome://extensions`
 4. Enable **Developer mode**
@@ -50,9 +50,21 @@ The extension popup controls on/off state and custom budget-window settings.
 
 To update: replace the local project folder with the latest download, then click the extension reload button in `chrome://extensions`.
 
-### Option 2: Bookmarklet (No Install)
+### Option 2: Tampermonkey (Auto-runs)
 
-1. Visit the **[installation page](https://nemesishubris.github.io/claude-usage-reticle/bookmarklet.html)**
+For automatic running every time you visit the page using a script manager:
+
+1. Install [Tampermonkey](https://www.tampermonkey.net/)
+2. **Enable script injection** (required for Chrome/Edge):
+   - **Chrome/Edge v138+**: Right-click Tampermonkey icon > "Manage Extension" > Enable "Allow User Scripts"
+   - **Older Chrome/Edge**: Go to `chrome://extensions` > Enable "Developer Mode" (top-right toggle)
+3. Try one of these install methods:
+   - **[Install from Greasy Fork](https://greasyfork.org/en/scripts/559145-claude-usage-reticle)**
+   - **[Install from Raw File](https://github.com/KatsuJinCode/claude-usage-reticle/raw/main/usage-reticle.user.js)**
+
+### Option 3: Bookmarklet (No Install)
+
+1. Visit the **[installation page](https://katsujincode.github.io/claude-usage-reticle/bookmarklet.html)**
 2. **Chrome/Edge**: Drag the button to your bookmarks bar
    **Firefox**: Click Copy, create a new bookmark, paste as URL
 3. Go to [claude.ai/settings/usage](https://claude.ai/settings/usage)
@@ -60,7 +72,7 @@ To update: replace the local project folder with the latest download, then click
 
 Click the bookmark whenever you want to inject the reticles on the current page. The bookmarklet uses the standard full reset windows and does not add custom-window controls.
 
-### Option 3: Firefox Temporary Extension
+### Option 4: Firefox Temporary Extension
 
 For local Firefox testing:
 
@@ -121,7 +133,7 @@ Colors range from near-white (small difference) to fully saturated (large differ
 | File | Purpose |
 |------|---------|
 | `bookmarklet.html` | Installation page with drag-to-install button and clean embedded bookmarklet injector |
-| `usage-reticle.user.js` | Full injector source used by the browser extension content script |
+| `usage-reticle.user.js` | Tampermonkey userscript and injector source for extension content script |
 | `extension/` | Manifest V3 browser extension package |
 | `test-time-parsing.html` | Unit tests for time calculation |
 | `color-calibrator.html` | Development tool for tuning color scaling |
@@ -172,3 +184,5 @@ MIT - Use it, share it, modify it.
 ---
 
 *Made for the Claude community. Not affiliated with Anthropic.*
+
+[GitHub](https://github.com/KatsuJinCode/claude-usage-reticle)
