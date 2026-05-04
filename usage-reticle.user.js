@@ -3,7 +3,7 @@
 // @namespace    https://github.com/KatsuJinCode
 // @version      2.5
 // @description  Visual usage tracker showing time delta and percentage - see if you're OVER or UNDER budget
-// @author       NemesisHubris, KatsuJinCode
+// @author       KatsuJinCode
 // @match        https://claude.ai/*
 // @icon         https://claude.ai/favicon.ico
 // @grant        none
