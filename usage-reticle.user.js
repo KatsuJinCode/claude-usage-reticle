@@ -505,9 +505,9 @@
     function describeActiveWindow() {
         var settings = state.settings;
         if (!settings.activeWindowEnabled) return 'Full reset windows.';
-        var days = settings.activeDays.length === 7 ? 'all days' : settings.activeDays.map(function(day) {
-            return DAYS[day];
-        }).join(', ');
+        var WEEK_ORDER = [1, 2, 3, 4, 5, 6, 0];
+        var ordered = WEEK_ORDER.filter(function(d) { return settings.activeDays.indexOf(d) !== -1; });
+        var days = ordered.length === 7 ? 'all days' : ordered.map(function(d) { return DAYS[d]; }).join(', ');
         var hours = settings.activeHoursEnabled ? settings.activeStart + '-' + settings.activeEnd : 'all day';
         return days + ', ' + hours + '.';
     }
@@ -661,50 +661,58 @@
         var totalActive = activeMillisBetween(start, end, settings);
         if (totalActive <= 0) return;
 
-        var cumulativeBefore = 0;
+        // Aggregate active ms per JS day-of-week (0=Sun..6=Sat) so a Sunday split
+        // across the window boundary collapses into one slice.
+        var perDow = [0, 0, 0, 0, 0, 0, 0];
         var day = startOfDay(start);
         if (day.getTime() > start.getTime()) day.setDate(day.getDate() - 1);
         var guard = 0;
         while (day.getTime() < end.getTime() && guard < 14) {
             var segs = getActiveSegmentsForDay(day, settings);
-            var dayActiveMs = 0;
             for (var i = 0; i < segs.length; i++) {
                 var ovStart = Math.max(segs[i].start.getTime(), start.getTime());
                 var ovEnd = Math.min(segs[i].end.getTime(), end.getTime());
-                if (ovEnd > ovStart) dayActiveMs += ovEnd - ovStart;
-            }
-
-            if (dayActiveMs > 0) {
-                var startP = (cumulativeBefore / totalActive) * 100;
-                var endP = ((cumulativeBefore + dayActiveMs) / totalActive) * 100;
-
-                if (startP > 0 && startP < 100) {
-                    var line = createItem('day-boundary-reticle');
-                    line.style.left = startP + '%';
-                    bar.appendChild(line);
-                }
-
-                var label = document.createElement('div');
-                label.className = 'day-boundary-label';
-                label.setAttribute(ITEM_ATTR, 'true');
-                label.style.left = ((startP + endP) / 2) + '%';
-                label.textContent = DAYS[day.getDay()];
-                bar.appendChild(label);
-
-                if (settings.activeHoursEnabled) {
-                    var hoursInDay = dayActiveMs / 3600000;
-                    for (var h = 1; h + 0.5 < hoursInDay; h++) {
-                        var hourPos = startP + (endP - startP) * (h / hoursInDay);
-                        var tick = createItem('hour-tick-reticle');
-                        tick.style.left = hourPos + '%';
-                        bar.appendChild(tick);
-                    }
-                }
-
-                cumulativeBefore += dayActiveMs;
+                if (ovEnd > ovStart) perDow[day.getDay()] += ovEnd - ovStart;
             }
             day.setDate(day.getDate() + 1);
             guard++;
+        }
+
+        // Render in user-week order (Mon=0..Sun=6).
+        var WEEK_ORDER = [1, 2, 3, 4, 5, 6, 0];
+        var cumulativeBefore = 0;
+        for (var w = 0; w < WEEK_ORDER.length; w++) {
+            var jsDow = WEEK_ORDER[w];
+            var dayActiveMs = perDow[jsDow];
+            if (dayActiveMs <= 0) continue;
+
+            var startP = (cumulativeBefore / totalActive) * 100;
+            var endP = ((cumulativeBefore + dayActiveMs) / totalActive) * 100;
+
+            if (startP > 0 && startP < 100) {
+                var line = createItem('day-boundary-reticle');
+                line.style.left = startP + '%';
+                bar.appendChild(line);
+            }
+
+            var label = document.createElement('div');
+            label.className = 'day-boundary-label';
+            label.setAttribute(ITEM_ATTR, 'true');
+            label.style.left = ((startP + endP) / 2) + '%';
+            label.textContent = DAYS[jsDow];
+            bar.appendChild(label);
+
+            if (settings.activeHoursEnabled) {
+                var hoursInDay = dayActiveMs / 3600000;
+                for (var h = 1; h + 0.5 < hoursInDay; h++) {
+                    var hourPos = startP + (endP - startP) * (h / hoursInDay);
+                    var tick = createItem('hour-tick-reticle');
+                    tick.style.left = hourPos + '%';
+                    bar.appendChild(tick);
+                }
+            }
+
+            cumulativeBefore += dayActiveMs;
         }
     }
 
@@ -870,9 +878,10 @@
         panel.innerHTML = '<div class="usage-reticle-settings__top"><div class="usage-reticle-settings__heading"><div class="usage-reticle-settings__title">Usage Reticle Budget Window</div><div class="usage-reticle-settings__summary" data-reticle-summary></div></div><button type="button" class="usage-reticle-settings__toggle" data-reticle-toggle></button></div><div class="usage-reticle-settings__grid"><div class="usage-reticle-settings__group"><span>Active days</span><div class="usage-reticle-settings__days" data-reticle-days></div></div><div class="usage-reticle-settings__group"><label><input type="checkbox" data-reticle-hours-enabled> Limit active hours</label><div class="usage-reticle-settings__time"><input type="time" data-reticle-start> <span>to</span> <input type="time" data-reticle-end></div></div></div>';
 
         var days = panel.querySelector('[data-reticle-days]');
-        DAY_NAMES.forEach(function(name, index) {
+        var WEEK_ORDER = [1, 2, 3, 4, 5, 6, 0];
+        WEEK_ORDER.forEach(function(jsDay) {
             var label = document.createElement('label');
-            label.innerHTML = '<input type="checkbox" data-reticle-day value="' + index + '"> ' + name.slice(0, 3);
+            label.innerHTML = '<input type="checkbox" data-reticle-day value="' + jsDay + '"> ' + DAY_NAMES[jsDay].slice(0, 3);
             days.appendChild(label);
         });
 

@@ -3,6 +3,7 @@
 
     var STORAGE_KEY = 'claudeUsageReticleExtensionSettings';
     var DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    var WEEK_ORDER = [1, 2, 3, 4, 5, 6, 0];
     var DEFAULT_SETTINGS = {
         activeWindowEnabled: false,
         activeDays: [0, 1, 2, 3, 4, 5, 6],
@@ -26,9 +27,9 @@
         end: document.getElementById('end')
     };
 
-    DAYS.forEach(function(day, index) {
+    WEEK_ORDER.forEach(function(jsDay) {
         var label = document.createElement('label');
-        label.innerHTML = '<input type="checkbox" data-day value="' + index + '"> ' + day;
+        label.innerHTML = '<input type="checkbox" data-day value="' + jsDay + '"> ' + DAYS[jsDay];
         els.days.appendChild(label);
     });
 
@@ -77,10 +78,11 @@
 
     function describe() {
         var settings = state.settings;
-        if (!settings.activeWindowEnabled) return 'Using full reset windows.';
-        var days = settings.activeDays.map(function(day) { return DAYS[day]; }).join(', ');
+        if (!settings.activeWindowEnabled) return 'Full reset windows.';
+        var ordered = WEEK_ORDER.filter(function(d) { return settings.activeDays.indexOf(d) !== -1; });
+        var days = ordered.length === 7 ? 'all days' : ordered.map(function(d) { return DAYS[d]; }).join(', ');
         var hours = settings.activeHoursEnabled ? settings.activeStart + '-' + settings.activeEnd : 'all day';
-        return 'Custom window compresses weekly budget into ' + days + ', ' + hours + '.';
+        return days + ', ' + hours + '.';
     }
 
     function render() {
