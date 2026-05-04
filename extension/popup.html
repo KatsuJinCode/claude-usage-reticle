@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Claude Usage Reticle</title>
+  <style>
+    :root { color-scheme: light dark; }
+    * { box-sizing: border-box; }
+    body {
+      width: 330px;
+      margin: 0;
+      padding: 14px;
+      font: 13px/1.4 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: light-dark(#241a12, #f4f1ea);
+      background: light-dark(#fffaf2, #22211f);
+    }
+    h1 { margin: 0; font-size: 15px; }
+    p { margin: 0; color: light-dark(#6c5848, #c9c1b6); }
+    label { display: flex; align-items: center; gap: 7px; }
+    input[type="time"] {
+      width: 100%;
+      border: 1px solid light-dark(#d7c4af, #57524d);
+      border-radius: 8px;
+      padding: 6px 8px;
+      color: inherit;
+      background: light-dark(#fffdf8, #171615);
+      font: inherit;
+    }
+    input[type="checkbox"] { accent-color: #3b82f6; }
+    .top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+    .switch {
+      border: 0;
+      border-radius: 999px;
+      padding: 7px 10px;
+      background: #2f7d32;
+      color: #fff;
+      font-weight: 800;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .switch[aria-pressed="false"] { background: #777; }
+    .group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      padding: 10px 0;
+      border-top: 1px solid light-dark(#eadccb, #373331);
+    }
+    .group-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+    .label-title { font-weight: 800; }
+    .days { display: flex; flex-wrap: wrap; gap: 7px 10px; }
+    .days label { min-width: 42px; }
+    .time-row { display: grid; grid-template-columns: 1fr auto 1fr; gap: 8px; align-items: center; }
+    .hint { font-size: 12px; color: light-dark(#7b6a5b, #bbb2a7); }
+    .status {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 8px;
+      padding: 5px 8px;
+      border-radius: 999px;
+      background: light-dark(#edf7ed, #1d3320);
+      color: light-dark(#245d28, #b7e0bb);
+      font-weight: 700;
+    }
+    .dot { width: 7px; height: 7px; border-radius: 999px; background: currentColor; }
+  </style>
+</head>
+<body>
+  <div class="top">
+    <div>
+      <h1>Claude Usage Reticle</h1>
+      <p>Runs on Claude Settings > Usage.</p>
+    </div>
+    <button id="enabled" class="switch" type="button" aria-pressed="true">On</button>
+  </div>
+
+  <div class="group">
+    <div class="group-head">
+      <span class="label-title">Custom Window</span>
+      <button id="window-enabled" class="switch" type="button" aria-pressed="false">Off</button>
+    </div>
+    <p id="summary" class="hint">Using full reset windows.</p>
+  </div>
+
+  <div class="group">
+    <span class="label-title">Active Days</span>
+    <div id="days" class="days"></div>
+  </div>
+
+  <div class="group">
+    <label><input id="hours-enabled" type="checkbox"> Limit active hours</label>
+    <div class="time-row">
+      <input id="start" type="time">
+      <span>to</span>
+      <input id="end" type="time">
+    </div>
+    <p class="hint">Excluded nights/weekends make the NOW marker move faster during active time. Claude does not reset overnight.</p>
+  </div>
+
+  <div class="status"><span class="dot"></span> Settings save automatically</div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

@@ -32,8 +32,8 @@ Example:
 - Usage bar AT reticle → On track
 
 ## Implementation Approach
-Tampermonkey userscript that:
-1. Matches claude.ai settings/usage page
+Browser extension plus bookmarklet fallback that:
+1. Matches Claude Settings > Usage
 2. Finds usage bar elements in DOM
 3. Extracts reset time from text
 4. Calculates target position
@@ -41,9 +41,11 @@ Tampermonkey userscript that:
 
 ## Technical Details
 - Target URL: https://claude.ai/settings/usage (or similar)
-- Injection method: Tampermonkey @match directive
+- Injection method: Manifest V3 content script or bookmarklet
 - Reticle style: Thin vertical line (1-2px), contrasting color (red or white with shadow)
 - Update frequency: On page load (weekly budget doesn't need real-time updates)
 
 ## Files
-- `usage-reticle.user.js` - The Tampermonkey userscript
+- `usage-reticle.user.js` - Full injector source used by the browser extension content script
+- `bookmarklet.html` - Installer page with a clean embedded no-settings bookmarklet injector
+- `extension/` - Manifest V3 browser extension package

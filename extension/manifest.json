@@ -1,0 +1,44 @@
+{
+  "manifest_version": 3,
+  "name": "Claude Usage Reticle",
+  "short_name": "Usage Reticle",
+  "version": "2.5.0",
+  "description": "Adds budget reticles to Claude usage bars on claude.ai/settings/usage.",
+  "homepage_url": "https://github.com/KatsuJinCode/claude-usage-reticle",
+  "icons": {
+    "16": "icons/icon-16.png",
+    "32": "icons/icon-32.png",
+    "48": "icons/icon-48.png",
+    "128": "icons/icon-128.png"
+  },
+  "action": {
+    "default_title": "Claude Usage Reticle",
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/icon-16.png",
+      "32": "icons/icon-32.png",
+      "48": "icons/icon-48.png",
+      "128": "icons/icon-128.png"
+    }
+  },
+  "permissions": ["storage"],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://claude.ai/settings/*"],
+      "js": ["content/usage-reticle.content.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "claude-usage-reticle@katsujincode.github.io",
+      "strict_min_version": "128.0",
+      "data_collection_permissions": {
+        "required": ["none"]
+      }
+    }
+  }
+}

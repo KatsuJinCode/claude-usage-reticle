@@ -3,219 +3,840 @@
 <head>
     <title>Claude Usage Reticle - Install</title>
     <style>
+        :root {
+            --bg: #f6f1e7;
+            --paper: #fffaf2;
+            --paper-strong: #fffdf8;
+            --ink: #241a12;
+            --muted: #6c5848;
+            --line: #d7c4af;
+            --accent: #7a4b2a;
+            --accent-2: #1f6f78;
+            --shadow: 0 14px 38px rgba(74, 44, 20, 0.12);
+            --radius: 18px;
+        }
+
         * { box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             margin: 0;
-            padding: 15px 25px;
-            line-height: 1.4;
-            color: #333;
-            font-size: 14px;
+            background:
+                radial-gradient(circle at top left, rgba(255,255,255,0.65), transparent 28%),
+                linear-gradient(180deg, #f8f3ea 0%, var(--bg) 100%);
+            color: var(--ink);
+            font: 15px/1.5 -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
         }
-        h1 { color: #D97706; margin: 0 0 3px 0; font-size: 1.5em; }
-        h2 { margin: 0 0 8px 0; font-size: 1em; }
-        p { margin: 4px 0; }
-        ol, ul { margin: 4px 0; padding-left: 18px; }
-        li { margin: 2px 0; }
-
-        .header { text-align: center; margin-bottom: 15px; }
-        .header p { color: #666; margin: 4px 0 0 0; font-size: 13px; }
-
-        .main-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-
-        .card {
-            border-radius: 6px;
-            padding: 12px;
-            border: 2px solid #3b82f6;
-            background: #eff6ff;
-        }
-        .card.yellow {
-            border-color: #D97706;
-            background: #FFFBEB;
-        }
-        .card h2 { border-bottom: 1px solid rgba(0,0,0,0.1); padding-bottom: 5px; }
-        .card.yellow .badge { background: #D97706; }
-
-        .badge {
-            background: #3b82f6; color: white; font-size: 10px;
-            padding: 2px 6px; border-radius: 3px; margin-left: 6px;
+        a { color: inherit; }
+        h1, h2, h3, p { margin: 0; }
+        ol, ul { margin: 0; padding-left: 1.2rem; }
+        li + li { margin-top: 0.35rem; }
+        code {
+            background: #f1e6d9;
+            color: #4e3422;
+            padding: 0.12rem 0.38rem;
+            border-radius: 999px;
+            font-size: 0.8rem;
         }
 
-        .setup-box {
-            background: #fef2f2;
-            border: 1px solid #dc2626;
-            border-radius: 5px;
-            padding: 8px 10px;
-            margin: 8px 0;
-            font-size: 12px;
+        .top-announcement {
+            background: linear-gradient(90deg, #54311a 0%, #7a4b2a 100%);
+            color: #fff8ef;
+            border-bottom: 1px solid rgba(255,255,255,0.14);
         }
-        .setup-box strong { color: #dc2626; }
-
-        .btn {
-            display: inline-block;
-            padding: 8px 14px;
-            border-radius: 5px;
-            text-decoration: none;
-            font-weight: 600;
-            font-size: 13px;
-            border: none;
-            cursor: pointer;
-            color: white;
-        }
-        .btn-blue { background: #3b82f6; }
-        .btn-blue:hover { background: #2563eb; }
-        .btn-green { background: #16a34a; }
-        .btn-green:hover { background: #15803d; }
-        .btn-gray { background: #9ca3af; color: #fff; }
-        .btn-gray:hover { background: #6b7280; }
-        .btn.copied { background: #16a34a; }
-
-        .bookmarklet-row { display: flex; gap: 8px; align-items: center; margin: 8px 0; flex-wrap: wrap; }
-        .drag-hint { font-size: 12px; color: #16a34a; margin-top: 6px; padding: 6px 8px; border-radius: 4px; background: #f0fdf4; }
-        .drag-hint.firefox { background: #fef2f2; color: #991b1b; }
-        .drag-hint.muted { color: #9ca3af; background: transparent; }
-
-        .bottom-section {
-            margin-top: 12px;
-            padding-top: 10px;
-            border-top: 1px solid #ddd;
+        .top-announcement__inner {
+            max-width: 1120px;
+            margin: 0 auto;
+            padding: 0.9rem 1.25rem;
             display: flex;
-            gap: 20px;
-            font-size: 13px;
+            gap: 1rem;
             align-items: flex-start;
         }
-        .bottom-section .info { display: flex; gap: 30px; flex: 0 0 auto; }
-        .bottom-section img {
-            border-radius: 6px;
-            flex: 1;
-            min-width: 50%;
-            max-width: 60%;
-            height: auto;
+        .top-announcement__label {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.18rem 0.55rem;
+            border-radius: 999px;
+            font-size: 0.72rem;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            background: rgba(255,255,255,0.14);
+            margin-right: 0.6rem;
         }
-        .bottom-section ul { margin: 0; }
+        .top-announcement__message {
+            color: rgba(255,248,239,0.94);
+            font-size: 0.92rem;
+        }
+
+        .container {
+            max-width: 1120px;
+            margin: 0 auto;
+            padding: 1.5rem 1.25rem 2.5rem;
+        }
+
+        .hero {
+            padding: 1.25rem 0 1.4rem;
+        }
+        .hero h1 {
+            font-size: clamp(2rem, 4vw, 3.35rem);
+            line-height: 1.02;
+            letter-spacing: -0.03em;
+            margin-bottom: 0.9rem;
+        }
+        .summary {
+            max-width: 760px;
+            color: var(--muted);
+            font-size: 1rem;
+        }
+
+        .main-nav {
+            margin: 0.25rem 0 1.5rem;
+        }
+        .nav-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.7rem;
+        }
+        .nav-link {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.72rem 1rem;
+            border-radius: 999px;
+            border: 1px solid var(--line);
+            background: rgba(255,255,255,0.65);
+            text-decoration: none;
+            color: #4a3324;
+            font-weight: 600;
+            box-shadow: 0 2px 10px rgba(74, 44, 20, 0.05);
+        }
+        .nav-link.nav-primary {
+            background: #fff;
+            border-color: #b88a63;
+            color: var(--accent);
+        }
+        .nav-link.nav-ai {
+            background: #f8efe5;
+            border-color: #d6b596;
+        }
+
+        .section-title {
+            margin: 1.4rem 0 0.85rem;
+            font-size: 1.05rem;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            color: #4a3324;
+        }
+
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1rem;
+        }
+        .card {
+            display: flex;
+            flex-direction: column;
+            gap: 0.9rem;
+            padding: 1.15rem;
+            border-radius: var(--radius);
+            border: 1px solid var(--line);
+            background: linear-gradient(180deg, var(--paper-strong) 0%, var(--paper) 100%);
+            box-shadow: var(--shadow);
+        }
+        .card--accent {
+            background: linear-gradient(180deg, #f7efe5 0%, #f3e3d3 100%);
+            border-color: #d3b08c;
+        }
+        .card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.8rem;
+        }
+        .card-title {
+            font-size: 1.05rem;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+        }
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.25rem 0.6rem;
+            border-radius: 999px;
+            background: #7a4b2a;
+            color: #fffaf2;
+            font-size: 0.75rem;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+        .card-desc {
+            color: var(--muted);
+        }
+        .action-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.7rem;
+        }
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.45rem;
+            padding: 0.78rem 1rem;
+            min-height: 44px;
+            border: 1px solid transparent;
+            border-radius: 999px;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 0.92rem;
+            cursor: pointer;
+            color: #fff8ef;
+        }
+        .btn-blue {
+            background: var(--accent-2);
+            border-color: var(--accent-2);
+        }
+        .btn-green {
+            background: #6e4b2a;
+            border-color: #6e4b2a;
+        }
+        .btn-gray {
+            background: #b49a82;
+            border-color: #b49a82;
+            color: #fffef9;
+        }
+        .btn.copied { background: #4d7f54; border-color: #4d7f54; }
+
+        .setup-box {
+            padding: 0.9rem 1rem;
+            border-radius: 14px;
+            background: #f8eee3;
+            border: 1px solid #dec4a8;
+            color: #5e4330;
+            font-size: 0.88rem;
+        }
+        .setup-box strong { color: #6b3d1f; }
+        details {
+            background: rgba(255,255,255,0.52);
+            border: 1px dashed #d3b08c;
+            border-radius: 14px;
+            padding: 0.8rem 0.9rem;
+        }
+        summary {
+            cursor: pointer;
+            color: #6e4b2a;
+            font-weight: 700;
+        }
+
+        .bookmarklet-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.7rem;
+            align-items: center;
+        }
+        .drag-hint {
+            margin-top: 0.25rem;
+            padding: 0.8rem 0.95rem;
+            border-radius: 14px;
+            background: #efe4d8;
+            color: #5c4838;
+            font-size: 0.88rem;
+            border: 1px solid #dec4a8;
+        }
+        .drag-hint.firefox {
+            background: #f7e6df;
+            border-color: #d4a493;
+            color: #7a3027;
+        }
+        .drag-hint.muted {
+            background: #f0ebe5;
+            border-color: #ddd0c1;
+            color: #6f6255;
+        }
+
+        .preview {
+            margin-top: 1.2rem;
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1rem;
+            align-items: start;
+        }
+        .preview-panel {
+            padding: 1.15rem;
+            border-radius: var(--radius);
+            border: 1px solid var(--line);
+            background: linear-gradient(180deg, var(--paper-strong) 0%, var(--paper) 100%);
+            box-shadow: var(--shadow);
+        }
+        .info-columns {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 1rem;
+        }
+        .info-block h3 {
+            margin-bottom: 0.5rem;
+            font-size: 0.98rem;
+        }
+        .info-block ul {
+            color: var(--muted);
+            font-size: 0.92rem;
+        }
+        .preview-image {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1rem;
+            overflow: visible;
+        }
+        .demo-shot {
+            margin: 0;
+            overflow: hidden;
+            border: 1px solid var(--line);
+            border-radius: calc(var(--radius) - 4px);
+            background: #fffaf2;
+        }
+        .demo-shot img {
+            width: 100%;
+            display: block;
+            aspect-ratio: 16 / 10;
+            object-fit: contain;
+            background: #fff;
+        }
+        .demo-shot figcaption {
+            padding: 0.65rem 0.8rem;
+            color: var(--muted);
+            font-size: 0.88rem;
+            font-weight: 600;
+        }
 
         .footer {
-            margin-top: 10px;
-            padding-top: 8px;
-            border-top: 1px solid #ddd;
-            color: #888;
-            font-size: 12px;
+            margin-top: 1.35rem;
+            padding-top: 1rem;
+            border-top: 1px solid #d7c4af;
+            color: var(--muted);
+            font-size: 0.88rem;
         }
-        .footer a { color: #666; }
+        .footer a {
+            color: #5e4330;
+            font-weight: 600;
+        }
 
-        code { background: #e5e5e5; padding: 1px 4px; border-radius: 3px; font-size: 11px; }
+        @media (max-width: 900px) {
+            .card-grid,
+            .preview,
+            .info-columns {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .container { padding: 1rem 0.9rem 2rem; }
+            .top-announcement__inner { padding: 0.9rem; }
+            .hero h1 { font-size: 2rem; }
+            .btn { width: 100%; }
+            .bookmarklet-row { align-items: stretch; }
+        }
     </style>
 </head>
 <body>
-    <div class="header">
-        <h1>Claude Usage Reticle</h1>
-        <p>See where your usage <em>should</em> be based on time in reset window</p>
+    <div class="top-announcement" role="banner">
+        <div class="top-announcement__inner">
+            <div>
+                <span class="top-announcement__label">Usage UI Update</span>
+                <span class="top-announcement__message"><strong>Claude changed the Usage page.</strong> This installer ships the updated reticle script for the Chrome extension and bookmarklet installs.</span>
+            </div>
+        </div>
     </div>
 
-    <div class="main-grid">
-        <div class="card">
-            <h2>Option 1: Tampermonkey <span class="badge">Recommended</span></h2>
-            <p>Auto-runs every time you visit the usage page.</p>
-            <ol>
-                <li>Install <a href="https://www.tampermonkey.net/" target="_blank">Tampermonkey</a></li>
-                <li>Enable script injection (see setup box below)</li>
-                <li>Try one of these install methods:</li>
-            </ol>
-            <div style="display: flex; gap: 8px; margin: 8px 0 8px 18px;">
-                <a class="btn btn-blue" href="https://greasyfork.org/en/scripts/559145-claude-usage-reticle" target="_blank">Greasy Fork</a>
-                <a class="btn btn-blue" href="https://github.com/KatsuJinCode/claude-usage-reticle/raw/main/usage-reticle.user.js">Raw File</a>
+    <div class="container">
+        <section class="hero">
+            <h1>Claude Usage Reticle</h1>
+            <div class="summary">A pace tracker for <code>claude.ai/settings/usage</code> that shows whether your usage is ahead of or behind an even-spend path through the current reset window.</div>
+        </section>
+
+        <nav class="main-nav">
+            <div class="nav-container">
+                <a href="https://claude.ai/settings/usage" class="nav-link nav-primary" target="_blank">Open Claude Usage</a>
+                <a href="https://github.com/KatsuJinCode/claude-usage-reticle/archive/refs/heads/main.zip" class="nav-link nav-ai">Download Extension</a>
+                <a href="https://github.com/KatsuJinCode/claude-usage-reticle" class="nav-link" target="_blank">GitHub</a>
             </div>
-            <div class="setup-box">
-                <strong>⚠️ Chrome/Edge setup required:</strong><br>
-                <strong>v138+:</strong> Right-click Tampermonkey → Manage Extension → Enable "Allow User Scripts"<br>
-                <strong>Older:</strong> <code>chrome://extensions</code> → Enable Developer Mode<br>
-                <span style="color: #666;">Firefox/Safari: No setup needed</span>
-            </div>
-            <details style="font-size: 12px; margin-top: 8px;">
-                <summary style="cursor: pointer; color: #666;">Links not working? Manual install</summary>
-                <ol style="margin: 6px 0; padding-left: 18px;">
-                    <li>Click Tampermonkey icon → <strong>Create a new script</strong></li>
-                    <li>Delete the template code</li>
-                    <li>Copy code from <a href="https://raw.githubusercontent.com/KatsuJinCode/claude-usage-reticle/main/usage-reticle.user.js" target="_blank">here</a> and paste</li>
-                    <li>Press Ctrl+S to save</li>
+        </nav>
+
+        <div class="section-title">Install Options</div>
+        <div class="card-grid">
+            <section class="card">
+                <div class="card-header">
+                    <div class="card-title">Chrome Extension</div>
+                    <span class="badge">Recommended</span>
+                </div>
+                <div class="card-desc">Auto-runs on Claude Usage with no script manager required. Settings live in the extension popup.</div>
+                <ol>
+                    <li><a href="https://github.com/KatsuJinCode/claude-usage-reticle/archive/refs/heads/main.zip">Download ZIP</a> and unzip it.</li>
+                    <li>Open <code>chrome://extensions</code>, enable <strong>Developer mode</strong>.</li>
+                    <li>Click <strong>Load unpacked</strong> and select the <code>extension</code> folder.</li>
                 </ol>
-            </details>
+                <div class="action-row">
+                    <a class="btn btn-blue" href="https://github.com/KatsuJinCode/claude-usage-reticle/archive/refs/heads/main.zip">Download ZIP</a>
+                </div>
+                <div class="setup-box" style="font-size: 0.8rem;">
+                    <strong>Chrome/Edge/Brave:</strong> use Developer mode -> Load unpacked.<br>
+                    <strong>Firefox:</strong> use <code>about:debugging</code> -> Load Temporary Add-on.
+                </div>
+            </section>
+
+            <section class="card">
+                <div class="card-header">
+                    <div class="card-title">Tampermonkey</div>
+                    <span class="badge" style="background: #3b82f6;">Auto-runs</span>
+                </div>
+                <div class="card-desc">Auto-runs every time you visit the page using a script manager.</div>
+                <ol>
+                    <li>Install <a href="https://www.tampermonkey.net/" target="_blank">Tampermonkey</a>.</li>
+                    <li>Enable "Allow User Scripts" in extension settings.</li>
+                    <li>Install the script via Greasy Fork or Raw File.</li>
+                </ol>
+                <div class="action-row">
+                    <a class="btn btn-blue" href="https://greasyfork.org/en/scripts/559145-claude-usage-reticle" target="_blank">Greasy Fork</a>
+                    <a class="btn btn-blue" href="https://github.com/KatsuJinCode/claude-usage-reticle/raw/main/usage-reticle.user.js">Raw File</a>
+                </div>
+                <div class="setup-box" style="font-size: 0.8rem;">
+                    <strong>Chrome v138+:</strong> Manage Extension -> Enable "Allow User Scripts".<br>
+                    <strong>Older:</strong> Enable Developer Mode in <code>chrome://extensions</code>.
+                </div>
+            </section>
+
+            <section class="card card--accent">
+                <div class="card-header">
+                    <div class="card-title">Bookmarklet</div>
+                    <span class="badge">No Extension</span>
+                </div>
+                <div class="card-desc">Click once whenever you want the overlay. Good for locked-down browsers.</div>
+                <div class="bookmarklet-row">
+                    <a class="btn btn-gray" id="drag-btn" href="#" aria-disabled="true">Loading...</a>
+                    <button class="btn btn-blue" id="copy-btn" onclick="copyBookmarklet()">Copy</button>
+                </div>
+                <div id="drag-hint" class="drag-hint"></div>
+                <div class="setup-box" style="font-size: 0.8rem;">
+                    Drag this button to your bookmarks bar or copy it into a new bookmark, then click it on Claude Usage.
+                </div>
+            </section>
         </div>
 
-        <div class="card yellow">
-            <h2>Option 2: Bookmarklet</h2>
-            <p>No extension needed. Click manually each time.</p>
-            <div class="bookmarklet-row">
-                <a class="btn" id="drag-btn" href="javascript:(function(){if(!location.href.includes(%22claude.ai%22)){alert(%22Go to claude.ai/settings/usage first!%22);return}var s=document.createElement(%22style%22);s.textContent=%22.usage-reticle{position:absolute;width:2px;height:100%25;background:%233b82f6;box-shadow:0 0 2px rgba(0,0,0,.5);pointer-events:none;z-index:10;top:0}.usage-reticle::after{content:'';position:absolute;left:-3px;bottom:-5px;width:0;height:0;border-left:4px solid transparent;border-right:4px solid transparent;border-bottom:5px solid %233b82f6}.usage-reticle-label{position:absolute;bottom:-22px;left:50%25;transform:translateX(-50%25);background:%233b82f6;color:%23fff;padding:1px 4px;border-radius:2px;font-size:9px;font-weight:600;white-space:nowrap}.delta-reticle{position:absolute;width:2px;height:100%25;box-shadow:0 0 2px rgba(0,0,0,.5);pointer-events:none;z-index:10;top:0}.delta-reticle::before{content:'';position:absolute;left:-3px;top:-5px;width:0;height:0;border-left:4px solid transparent;border-right:4px solid transparent}.delta-reticle-label{position:absolute;top:-22px;left:50%25;transform:translateX(-50%25);padding:1px 4px;border-radius:2px;font-size:9px;font-weight:600;white-space:nowrap;color:%23fff;text-shadow:0 1px 2px rgba(0,0,0,0.9),0 0 4px rgba(0,0,0,0.7),0 0 8px rgba(0,0,0,0.4);border:1px solid %23000}.reticle-overlay{position:absolute;height:100%25;top:0;pointer-events:none;z-index:4;border-radius:4px}.reticle-glow{position:absolute;height:100%25;top:0;pointer-events:none;z-index:3;border-radius:4px}%22;document.head.appendChild(s);var days=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];function fmtTime(d,short){var day=days[d.getDay()];var h=d.getHours();var m=d.getMinutes();var ap=h%3E=12?'PM':'AM';h=h%2512;if(h===0)h=12;var ts=h+':'+(m%3C10?'0':'')+m+' '+ap;return short?ts:day+' '+ts}function fmtDelta(hrs,pct){var over=hrs%3E=0;hrs=Math.abs(hrs);var d=Math.floor(hrs/24);var h=Math.floor(hrs%2524);var m=Math.round((hrs-Math.floor(hrs))*60);var t='';if(d%3E0)t=d+'d '+h+'h';else if(h%3E0)t=h+'h'+(m%3E0?' '+m+'m':'');else t=m+'m';return t+' '+(over?'OVER':'UNDER')+' ('+Math.abs(Math.round(pct))+'%25)'}function getColor(pct){var raw=Math.min(Math.abs(pct)/100*2,1);var p=0.35+(1-0.35)*raw;if(pct%3C0){var sat=5+p*70;var lit=95-p*55;return'hsl(142,'+sat+'%25,'+lit+'%25)'}else{var sat=5+p*75;var lit=95-p*55;return'hsl(0,'+sat+'%25,'+lit+'%25)'}}function addReticles(){document.querySelectorAll(%22div.flex.flex-row.gap-x-8.justify-between.items-center%22).forEach(function(c){var p=c.querySelector(%22p.text-text-400.whitespace-nowrap%22);if(!p)return;var t=p.textContent;var titleEl=c.querySelector(%22p.text-text-100%22);var isSession=titleEl%26%26titleEl.textContent.toLowerCase().includes(%22current session%22);var windowHrs=isSession?5:168;var hrsUntil,reset;var m1=t.match(/in\s+(?:(\d+)\s*hr?)?\s*(?:(\d+)\s*min)?/i);if(m1%26%26(m1[1]||m1[2])){hrsUntil=parseInt(m1[1]||0)+(parseInt(m1[2]||0)/60);reset=new Date(Date.now()+hrsUntil*3600000)}else{var m2=t.match(/(sun|mon|tue|wed|thu|fri|sat)\w*\s+(\d+):(\d+)\s*(am|pm)/i);if(!m2)return;var h=parseInt(m2[2]);if(m2[4].toLowerCase()===%22pm%22%26%26h!==12)h+=12;if(m2[4].toLowerCase()===%22am%22%26%26h===12)h=0;var di={sun:0,mon:1,tue:2,wed:3,thu:4,fri:5,sat:6};var rd=di[m2[1].toLowerCase().slice(0,3)];var now=new Date();reset=new Date();reset.setHours(h,parseInt(m2[3]),0,0);var d=rd-now.getDay();if(d%3C0)d+=7;if(d===0%26%26reset%3C=now)d=7;reset.setDate(now.getDate()+d);hrsUntil=(reset-now)/3600000}var nowPos=Math.max(0,Math.min(100,((windowHrs-hrsUntil)/windowHrs)*100));var bar=c.querySelector(%22div.bg-bg-000.rounded.border.h-4%22);if(!bar)return;var fill=bar.querySelector(%22div%22);var usagePos=0;if(fill){var w=fill.style.width;if(w)usagePos=parseFloat(w)}var windowStart=new Date(reset.getTime()-windowHrs*3600000);var usageHrs=(usagePos/100)*windowHrs;var usageTime=new Date(windowStart.getTime()+usageHrs*3600000);var usageLbl=fmtTime(usageTime,isSession);var diffPct=usagePos-nowPos;var diffHrs=(diffPct/100)*windowHrs;var deltaLbl=fmtDelta(diffHrs,diffPct);var color=getColor(diffPct);var raw=Math.min(Math.abs(diffPct)/100*2,1);var intensity=0.35+(1-0.35)*raw;bar.style.position=%22relative%22;bar.style.overflow=%22visible%22;bar.querySelectorAll(%22.delta-reticle,.usage-reticle,.reticle-overlay,.reticle-glow%22).forEach(function(el){el.remove()});if(diffPct%3E0){var glow=document.createElement(%22div%22);glow.className=%22reticle-glow%22;glow.style.left=nowPos+'%25';glow.style.width=Math.abs(diffPct)+'%25';glow.style.boxShadow='0 0 '+(8+intensity*15)+'px '+(2+intensity*5)+'px hsla(0,'+(50+intensity*30)+'%25,'+(50-intensity*10)+'%25,'+(0.4+intensity*0.4)+')';bar.appendChild(glow);var ov=document.createElement(%22div%22);ov.className=%22reticle-overlay%22;ov.style.left=nowPos+'%25';ov.style.width=Math.abs(diffPct)+'%25';ov.style.background='hsla(0,'+(60+intensity*20)+'%25,'+(40-intensity*10)+'%25,'+(0.55+intensity*0.25)+')';bar.appendChild(ov)}else if(diffPct%3C0){var ov=document.createElement(%22div%22);ov.className=%22reticle-overlay%22;ov.style.left=usagePos+'%25';ov.style.width=Math.abs(diffPct)+'%25';ov.style.background='hsla(142,'+(40+intensity*30)+'%25,'+(50-intensity*10)+'%25,'+(0.4+intensity*0.35)+')';bar.appendChild(ov)}var dr=document.createElement(%22div%22);dr.className=%22delta-reticle%22;dr.style.left=nowPos+'%25';dr.style.background=color;var arrowStyle=document.createElement(%22style%22);arrowStyle.textContent='.delta-reticle::before{border-top:5px solid '+color+'}';dr.appendChild(arrowStyle);var dlbl=document.createElement(%22div%22);dlbl.className=%22delta-reticle-label%22;dlbl.style.background=color;dlbl.textContent=deltaLbl;dr.appendChild(dlbl);bar.appendChild(dr);var ur=document.createElement(%22div%22);ur.className=%22usage-reticle%22;ur.style.left=usagePos+'%25';var ulbl=document.createElement(%22div%22);ulbl.className=%22usage-reticle-label%22;ulbl.textContent=usageLbl;ur.appendChild(ulbl);bar.appendChild(ur)})}addReticles();setInterval(addReticles,60000)})();">📍 Usage Reticle</a>
-                <button class="btn" id="copy-btn" onclick="copyBookmarklet()">📋 Copy</button>
-            </div>
-            <div id="drag-hint" class="drag-hint"></div>
-            <p style="font-size: 12px; color: #666; margin-top: 6px;">Then go to <a href="https://claude.ai/settings/usage" target="_blank">claude.ai/settings/usage</a> and click the bookmark</p>
+        <div class="section-title">What You See</div>
+        <div class="preview">
+            <section class="preview-panel">
+                <div class="info-columns">
+                    <div class="info-block">
+                        <h3>How to read it</h3>
+                        <ul>
+                            <li><strong>Blue marker</strong> marks your actual usage position.</li>
+                            <li><strong>Green label</strong> means you are under the expected pace.</li>
+                            <li><strong>Red label</strong> means you are over the expected pace.</li>
+                            <li>Color intensity scales with how far off you are.</li>
+                        </ul>
+                    </div>
+                    <div class="info-block">
+                        <h3>Notes</h3>
+                        <ul>
+                            <li>Updates on page changes, focus, and visibility changes.</li>
+                            <li>Works with the session bar and weekly model bars.</li>
+                            <li>Skips fixed-count bars such as Daily included routine runs.</li>
+                            <li>Bookmarklet uses a small one-click injector with no settings panel.</li>
+                            <li>The extension popup controls custom budget-window settings.</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+            <section class="preview-panel preview-image">
+                <figure class="demo-shot">
+                    <img src="demo_images/usage-tracker.png" alt="Claude usage tracker with reticles">
+                    <figcaption>Usage tracker reticles on Claude usage bars</figcaption>
+                </figure>
+                <figure class="demo-shot">
+                    <img src="demo_images/extension-custom-window.png" alt="Extension custom window settings">
+                    <figcaption>Extension popup custom-window controls</figcaption>
+                </figure>
+            </section>
+        </div>
+
+        <div class="footer">
+            <a href="https://github.com/KatsuJinCode/claude-usage-reticle" target="_blank">GitHub</a> · 
+            Contributors: 
+            <a href="https://github.com/KatsuJinCode" target="_blank">KatsuJinCode</a>, 
+            <a href="https://github.com/NemesisHubris" target="_blank">NemesisHubris</a>, 
+            <a href="https://github.com/podfishapp" target="_blank">podfishapp</a> · 
+            Not affiliated with Anthropic.
         </div>
     </div>
 
-    <div class="bottom-section">
-        <div class="info">
-            <div>
-                <strong>How to read:</strong>
-                <ul>
-                    <li><span style="color:#3b82f6">■</span> <strong>Blue reticle</strong> = your usage position (shows equivalent day/time)</li>
-                    <li><span style="color:#22c55e">■</span> <strong>Green label</strong> = UNDER budget with time + percentage</li>
-                    <li><span style="color:#dc2626">■</span> <strong>Red label</strong> = OVER budget with time + percentage</li>
-                    <li>Color intensity scales with how far off you are</li>
-                </ul>
-            </div>
-            <div>
-                <strong>Notes:</strong>
-                <ul>
-                    <li>Auto-updates every minute</li>
-                    <li>Works with session (5hr) + weekly limits</li>
-                    <li><a href="https://www.tampermonkey.net/faq.php" target="_blank">Tampermonkey FAQ</a></li>
-                </ul>
-            </div>
-        </div>
-        <img src="install-preview.png" alt="Usage Reticle Demo">
-    </div>
+    <script id="bookmarklet-source" type="text/plain">
+(function() {
+    'use strict';
 
-    <div class="footer">
-        <a href="https://github.com/KatsuJinCode/claude-usage-reticle" target="_blank">GitHub</a> · Made for the Claude community. Not affiliated with Anthropic.
-    </div>
+    var ROOT_KEY = '__claudeUsageReticle';
+    var BUILD_ID = '2.5-20260501-bookmarklet-clean';
+    var STYLE_ATTR = 'data-usage-reticle-style';
+    var ITEM_ATTR = 'data-usage-reticle-item';
+    var CONTROL_ATTR = 'data-usage-reticle-control';
+    var RETICLE_SELECTOR = '[' + ITEM_ATTR + '],.usage-reticle,.delta-reticle,.reticle-overlay,.reticle-glow';
+    var DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    var DAY_INDEX = {sun:0, mon:1, tue:2, wed:3, thu:4, fri:5, sat:6};
+    var SESSION_ROWS = {'current session': true};
+    var WEEKLY_ROWS = {'all models': true, 'sonnet only': true, 'claude design': true};
 
+    var existing = window[ROOT_KEY];
+    if (existing && existing.build === BUILD_ID && typeof existing.refresh === 'function') {
+        if (!/(?:^|\.)claude\.ai$/.test(location.hostname)) console.warn("Go to claude.ai/settings/usage first!");
+        existing.refresh();
+        return;
+    }
+    if (existing && typeof existing.destroy === 'function') existing.destroy();
+
+    if (!/(?:^|\.)claude\.ai$/.test(location.hostname)) {
+        console.warn("Go to claude.ai/settings/usage first!");
+        return;
+    }
+
+    var state = {
+        build: BUILD_ID,
+        intervalId: null,
+        retryId: null,
+        observer: null,
+        lastUrl: location.href,
+        refresh: addReticles,
+        destroy: destroy
+    };
+    window[ROOT_KEY] = state;
+
+    injectStyles();
+    start();
+
+    function destroy() {
+        if (state.intervalId) clearInterval(state.intervalId);
+        if (state.retryId) clearInterval(state.retryId);
+        if (state.observer) state.observer.disconnect();
+        removeReticles(document);
+        document.querySelectorAll('[' + CONTROL_ATTR + ']').forEach(function(el) { el.remove(); });
+        document.querySelectorAll('style[' + STYLE_ATTR + ']').forEach(function(el) { el.remove(); });
+        if (window[ROOT_KEY] === state) delete window[ROOT_KEY];
+    }
+
+    function start() {
+        var count = addReticles();
+        if (count === 0) {
+            var attempts = 0;
+            state.retryId = setInterval(function() {
+                attempts++;
+                if (addReticles() > 0 || attempts >= 10) {
+                    clearInterval(state.retryId);
+                    state.retryId = null;
+                }
+            }, 1000);
+        }
+
+        state.intervalId = setInterval(addReticles, 60000);
+        state.observer = new MutationObserver(function() {
+            if (location.href !== state.lastUrl) {
+                state.lastUrl = location.href;
+                setTimeout(addReticles, 1000);
+            }
+        });
+        state.observer.observe(document.body || document.documentElement, {childList: true, subtree: true});
+    }
+
+    function injectStyles() {
+        if (document.head.querySelector('style[' + STYLE_ATTR + ']')) return;
+        var style = document.createElement('style');
+        style.setAttribute(STYLE_ATTR, 'true');
+        style.textContent = '.usage-reticle{position:absolute;width:2px;height:100%;background:#3b82f6;box-shadow:0 0 2px rgba(0,0,0,.5);pointer-events:none;z-index:10;top:0}.usage-reticle::after{content:"";position:absolute;left:-3px;bottom:-5px;width:0;height:0;border-left:4px solid transparent;border-right:4px solid transparent;border-bottom:5px solid #3b82f6}.usage-reticle-label{position:absolute;bottom:-22px;left:50%;transform:translateX(-50%);background:#3b82f6;color:#fff;padding:1px 4px;border-radius:2px;font-size:9px;font-weight:600;white-space:nowrap}.delta-reticle{position:absolute;width:2px;height:100%;box-shadow:0 0 2px rgba(0,0,0,.5);pointer-events:none;z-index:10;top:0}.delta-reticle::before{content:"";position:absolute;left:-3px;top:-5px;width:0;height:0;border-left:4px solid transparent;border-right:4px solid transparent;border-top:5px solid var(--reticle-arrow-color,#ef4444)}.delta-reticle-label{position:absolute;top:-22px;left:50%;transform:translateX(-50%);padding:1px 4px;border-radius:2px;font-size:9px;font-weight:600;white-space:nowrap;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,0.9),0 0 4px rgba(0,0,0,0.7),0 0 8px rgba(0,0,0,0.4);border:1px solid #000}.reticle-overlay{position:absolute;height:100%;top:0;pointer-events:none;z-index:4;border-radius:9999px}.reticle-glow{position:absolute;height:100%;top:0;pointer-events:none;z-index:3;border-radius:9999px}';
+        document.head.appendChild(style);
+    }
+
+    function normalizeText(text) {
+        return (text || '').replace(/\s+/g, ' ').trim();
+    }
+
+    function normalizeKey(text) {
+        return normalizeText(text).toLowerCase();
+    }
+
+    function clampPct(value) {
+        return Math.max(0, Math.min(100, value));
+    }
+
+    function fmtTime(d, short) {
+        var day = DAYS[d.getDay()];
+        var h = d.getHours();
+        var m = d.getMinutes();
+        var ap = h >= 12 ? 'PM' : 'AM';
+        h = h % 12;
+        if (h === 0) h = 12;
+        var ts = h + ':' + (m < 10 ? '0' : '') + m + ' ' + ap;
+        return short ? ts : day + ' ' + ts;
+    }
+
+    function fmtDelta(hours, pct) {
+        var over = hours >= 0;
+        hours = Math.abs(hours);
+        var days = Math.floor(hours / 24);
+        var hrs = Math.floor(hours % 24);
+        var mins = Math.round((hours - Math.floor(hours)) * 60);
+        if (mins === 60) {
+            hrs += 1;
+            mins = 0;
+        }
+        var text = '';
+        if (days > 0) text = days + 'd ' + hrs + 'h';
+        else if (hrs > 0) text = hrs + 'h' + (mins > 0 ? ' ' + mins + 'm' : '');
+        else text = mins + 'm';
+        return text + ' ' + (over ? 'OVER' : 'UNDER') + ' (' + Math.abs(Math.round(pct)) + '%)';
+    }
+
+    function getColor(pct) {
+        var raw = Math.min(Math.abs(pct) / 100 * 2, 1);
+        var p = 0.35 + 0.65 * raw;
+        if (pct < 0) return 'hsl(142,' + (5 + p * 70) + '%,' + (95 - p * 55) + '%)';
+        return 'hsl(0,' + (5 + p * 75) + '%,' + (95 - p * 55) + '%)';
+    }
+
+    function parseReset(text) {
+        var m1 = text.match(/in\s+(?:(\d+)\s*hr?)?\s*(?:(\d+)\s*min)?/i);
+        if (m1 && (m1[1] || m1[2])) {
+            var hrsUntil = parseInt(m1[1] || 0, 10) + parseInt(m1[2] || 0, 10) / 60;
+            return {hrsUntil: hrsUntil, reset: new Date(Date.now() + hrsUntil * 3600000)};
+        }
+
+        var m2 = text.match(/(sun|mon|tue|wed|thu|fri|sat)\w*\s+(\d+):(\d+)\s*(am|pm)/i);
+        if (!m2) return null;
+        var h = parseInt(m2[2], 10);
+        if (m2[4].toLowerCase() === 'pm' && h !== 12) h += 12;
+        if (m2[4].toLowerCase() === 'am' && h === 12) h = 0;
+        var resetDay = DAY_INDEX[m2[1].toLowerCase().slice(0, 3)];
+        var now = new Date();
+        var reset = new Date();
+        reset.setHours(h, parseInt(m2[3], 10), 0, 0);
+        var daysUntil = resetDay - now.getDay();
+        if (daysUntil < 0) daysUntil += 7;
+        if (daysUntil === 0 && reset <= now) daysUntil = 7;
+        reset.setDate(now.getDate() + daysUntil);
+        return {hrsUntil: (reset - now) / 3600000, reset: reset};
+    }
+
+    function findBlock(bar) {
+        var node = bar.parentElement;
+        for (var depth = 0; depth < 10 && node; depth++) {
+            var spans = node.querySelectorAll('span');
+            for (var i = 0; i < spans.length; i++) {
+                if (/^\s*Resets/i.test(spans[i].textContent || '')) {
+                    return {block: node, resetEl: spans[i]};
+                }
+            }
+            node = node.parentElement;
+        }
+        return null;
+    }
+
+    function findTitle(block, resetEl) {
+        var spans = block.querySelectorAll('span');
+        for (var i = 0; i < spans.length; i++) {
+            var span = spans[i];
+            if (span === resetEl || resetEl.contains(span) || span.contains(resetEl)) continue;
+            var text = normalizeText(span.textContent || '');
+            if (!text || /used\s*$/i.test(text) || /^resets/i.test(text)) continue;
+            return span;
+        }
+        return null;
+    }
+
+    function getSectionTitle(section) {
+        var heading = section && section.querySelector('h1,h2,h3,h4');
+        var text = normalizeKey(heading ? heading.textContent : '');
+        if (text.indexOf('plan usage limits') !== -1) return 'plan usage limits';
+        if (text.indexOf('weekly limits') !== -1) return 'weekly limits';
+        return text;
+    }
+
+    function findSection(el) {
+        var node = el;
+        while (node && node !== document.body) {
+            if (node.tagName && node.tagName.toLowerCase() === 'section') return node;
+            node = node.parentElement;
+        }
+        return null;
+    }
+
+    function supportsBar(bar, label) {
+        var title = getSectionTitle(findSection(bar));
+        if (SESSION_ROWS[label]) return title === 'plan usage limits';
+        if (WEEKLY_ROWS[label]) return title === 'weekly limits';
+        return false;
+    }
+
+    function removeReticles(root) {
+        root.querySelectorAll(RETICLE_SELECTOR).forEach(function(el) { el.remove(); });
+    }
+
+    function createItem(className) {
+        var el = document.createElement('div');
+        el.className = className;
+        el.setAttribute(ITEM_ATTR, 'true');
+        return el;
+    }
+
+    function usagePercent(bar, row) {
+        var value = parseFloat(bar.getAttribute('aria-valuenow'));
+        if (!isNaN(value)) return clampPct(value);
+        var fill = bar.querySelector('div');
+        var width = fill && (fill.style.width || '').match(/([\d.]+)%/);
+        if (width) return clampPct(parseFloat(width[1]));
+        var match = normalizeText(row.textContent).match(/(\d{1,3}(?:\.\d+)?)%\s*used/i);
+        return match ? clampPct(parseFloat(match[1])) : null;
+    }
+
+    function renderBar(bar, block, resetEl, label) {
+        var resetInfo = parseReset(normalizeText(resetEl.textContent || ''));
+        if (!resetInfo) return false;
+        var windowHours = SESSION_ROWS[label] ? 5 : 168;
+        var usagePos = usagePercent(bar, block);
+        if (usagePos == null) return false;
+
+        var nowPos = clampPct(((windowHours - resetInfo.hrsUntil) / windowHours) * 100);
+        var windowStart = new Date(resetInfo.reset.getTime() - windowHours * 3600000);
+        var usageTime = new Date(windowStart.getTime() + usagePos / 100 * windowHours * 3600000);
+        var diffPct = usagePos - nowPos;
+        var diffHrs = diffPct / 100 * windowHours;
+        var color = getColor(diffPct);
+        var raw = Math.min(Math.abs(diffPct) / 100 * 2, 1);
+        var intensity = 0.35 + 0.65 * raw;
+
+        bar.style.position = 'relative';
+        bar.style.overflow = 'visible';
+        removeReticles(bar);
+
+        if (diffPct > 0) {
+            var glow = createItem('reticle-glow');
+            glow.style.left = nowPos + '%';
+            glow.style.width = Math.abs(diffPct) + '%';
+            glow.style.boxShadow = '0 0 ' + (8 + intensity * 15) + 'px ' + (2 + intensity * 5) + 'px hsla(0,' + (50 + intensity * 30) + '%,' + (50 - intensity * 10) + '%,' + (0.4 + intensity * 0.4) + ')';
+            bar.appendChild(glow);
+            var over = createItem('reticle-overlay');
+            over.style.left = nowPos + '%';
+            over.style.width = Math.abs(diffPct) + '%';
+            over.style.background = 'hsla(0,' + (60 + intensity * 20) + '%,' + (40 - intensity * 10) + '%,' + (0.55 + intensity * 0.25) + ')';
+            bar.appendChild(over);
+        } else if (diffPct < 0) {
+            var under = createItem('reticle-overlay');
+            under.style.left = usagePos + '%';
+            under.style.width = Math.abs(diffPct) + '%';
+            under.style.background = 'hsla(142,' + (40 + intensity * 30) + '%,' + (50 - intensity * 10) + '%,' + (0.4 + intensity * 0.35) + ')';
+            bar.appendChild(under);
+        }
+
+        var delta = createItem('delta-reticle');
+        delta.style.left = nowPos + '%';
+        delta.style.background = color;
+        delta.style.setProperty('--reticle-arrow-color', color);
+        var deltaLabel = document.createElement('div');
+        deltaLabel.className = 'delta-reticle-label';
+        deltaLabel.style.background = color;
+        deltaLabel.textContent = fmtDelta(diffHrs, diffPct);
+        delta.appendChild(deltaLabel);
+        bar.appendChild(delta);
+
+        var usage = createItem('usage-reticle');
+        usage.style.left = usagePos + '%';
+        var usageLabel = document.createElement('div');
+        usageLabel.className = 'usage-reticle-label';
+        usageLabel.textContent = fmtTime(usageTime, !!SESSION_ROWS[label]);
+        usage.appendChild(usageLabel);
+        bar.appendChild(usage);
+        return true;
+    }
+
+    function addReticles() {
+        if (!/(?:^|\.)claude\.ai$/.test(location.hostname) || !/\/settings\/usage/.test(location.pathname)) {
+            return 0;
+        }
+        var added = 0;
+        document.querySelectorAll('div[role="progressbar"][aria-label="Usage"][aria-valuenow]').forEach(function(bar) {
+            var found = findBlock(bar);
+            if (!found) return;
+            var title = findTitle(found.block, found.resetEl);
+            var label = normalizeKey(title ? title.textContent : '');
+            if (!supportsBar(bar, label)) return;
+            if (renderBar(bar, found.block, found.resetEl, label)) added++;
+        });
+        return added;
+    }
+})();
+    </script>
     <script>
         var ua = navigator.userAgent;
         var isFirefox = ua.includes('Firefox');
         var isChrome = ua.includes('Chrome') || ua.includes('Edg/');
-
         var dragBtn = document.getElementById('drag-btn');
         var copyBtn = document.getElementById('copy-btn');
         var dragHint = document.getElementById('drag-hint');
+        var bookmarkletCode = '';
+        var bookmarkletLabel = '📍 Usage Reticle';
 
-        if (isFirefox) {
-            dragBtn.className = 'btn btn-gray';
-            dragBtn.style.cursor = 'not-allowed';
-            copyBtn.className = 'btn btn-green';
-            dragHint.className = 'drag-hint firefox';
-            dragHint.innerHTML = '🦊 <strong>Firefox detected:</strong> Drag doesn\'t work here. Click <strong>Copy</strong>, then create a new bookmark and paste as the URL.';
-        } else if (isChrome) {
-            dragBtn.className = 'btn btn-green';
-            dragBtn.style.cursor = 'grab';
-            copyBtn.className = 'btn btn-gray';
-            dragHint.innerHTML = '🌐 <strong>Chrome detected:</strong> Just drag this button up to your bookmarks bar!';
-        } else {
+        setBrowserHint();
+        initBookmarklet();
+
+        function setBrowserHint() {
+            if (isFirefox) {
+                dragBtn.className = 'btn btn-gray';
+                dragBtn.style.cursor = 'not-allowed';
+                copyBtn.className = 'btn btn-green';
+                dragHint.className = 'drag-hint firefox';
+                dragHint.innerHTML = '<strong>Firefox detected:</strong> Drag does not work here. Click <strong>Copy</strong>, then create a new bookmark and paste as the URL.';
+                return;
+            }
+
+            if (isChrome) {
+                dragBtn.className = 'btn btn-green';
+                dragBtn.style.cursor = 'grab';
+                copyBtn.className = 'btn btn-gray';
+                dragHint.innerHTML = '<strong>Chrome detected:</strong> Drag this button up to your bookmarks bar.';
+                return;
+            }
+
             dragBtn.className = 'btn btn-blue';
             dragBtn.style.cursor = 'grab';
             copyBtn.className = 'btn btn-blue';
-            dragHint.innerHTML = 'Drag to bookmarks bar, or Copy → create bookmark → paste as URL';
             dragHint.className = 'drag-hint muted';
+            dragHint.innerHTML = 'Drag to bookmarks bar, or Copy -> create bookmark -> paste as URL';
+        }
+
+        async function initBookmarklet() {
+            try {
+                var source = await loadBookmarkletSource();
+                source = source.replace(/^\/\/ ==UserScript==[\s\S]*?\/\/ ==\/UserScript==\s*/, '');
+                bookmarkletCode = 'javascript:' + encodeURIComponent(source.trim());
+
+                dragBtn.href = bookmarkletCode;
+                dragBtn.textContent = bookmarkletLabel;
+                dragBtn.removeAttribute('aria-disabled');
+            } catch (err) {
+                bookmarkletCode = 'javascript:' + encodeURIComponent(document.getElementById('bookmarklet-source').textContent.trim());
+                dragBtn.href = bookmarkletCode;
+                dragBtn.textContent = bookmarkletLabel;
+                dragBtn.removeAttribute('aria-disabled');
+            }
+        }
+
+        async function loadBookmarkletSource() {
+            return document.getElementById('bookmarklet-source').textContent;
         }
 
         function copyBookmarklet() {
-            var btn = document.getElementById('copy-btn');
-            var code = document.getElementById('drag-btn').getAttribute('href');
-            navigator.clipboard.writeText(code).then(function() {
-                btn.textContent = '✓ Copied!';
-                btn.classList.add('copied');
-                setTimeout(function() { btn.textContent = '📋 Copy'; btn.classList.remove('copied'); }, 2000);
+            if (!bookmarkletCode) return;
+            navigator.clipboard.writeText(bookmarkletCode).then(function() {
+                copyBtn.textContent = 'Copied!';
+                copyBtn.classList.add('copied');
+                setTimeout(function() {
+                    copyBtn.textContent = 'Copy';
+                    copyBtn.classList.remove('copied');
+                }, 2000);
             });
         }
     </script>
