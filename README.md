@@ -137,7 +137,11 @@ When the change is in shared code that affects both sides, do both releases in t
 
 ## Version History
 
-### Userscript v3.3 / Extension v3.2.0 (Current)
+### Userscript v3.4 / Extension v3.3.0 (Current)
+- Fixed a latent init-order bug that had been there since v3.0. The boot section called `init()` at the top of the IIFE, but the `platforms` object literal isn't assigned until 150 lines further down. Because `var` declarations hoist names without values, the first `currentPlatform()` lookup saw `platforms === undefined`, silently returned null, `isUsagePage()` returned false, and the script bailed without drawing anything. Sometimes a later DOM mutation would re-trigger the render and "heal" it; sometimes the page sat empty. Moved the `init()` call to the bottom of the IIFE so every declaration has run before init touches them
+- Extended the auto-reload to Z.ai as well — Z.ai also requires manual refresh to update usage. Auto-reload is now active on MiniMax, Codex, and Z.ai. Only Claude is excluded (its bars update reactively)
+
+### Userscript v3.3 / Extension v3.2.0
 - Extended the focus / 10-minute auto-reload to the Codex analytics page. Codex's view only re-fetches usage on navigation, so without this it shows the snapshot from when you first opened the tab
 
 ### Userscript v3.2 / Extension v3.1.0

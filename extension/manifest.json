@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "Claude Usage Reticle",
   "short_name": "Usage Reticle",
-  "version": "3.2.0",
+  "version": "3.3.0",
   "description": "Adds budget reticles to usage bars across Claude, Codex, Z.ai, and MiniMax.",
   "homepage_url": "https://github.com/KatsuJinCode/claude-usage-reticle",
   "icons": {

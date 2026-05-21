@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Claude Usage Reticle
 // @namespace    https://github.com/KatsuJinCode
-// @version      3.3
+// @version      3.4
 // @description  Visual usage tracker for Claude, Codex, Z.ai, MiniMax — see if you're OVER or UNDER budget
 // @author       KatsuJinCode, NemesisHubris, podfishapp
 // @match        https://claude.ai/*
@@ -20,8 +20,8 @@
     'use strict';
 
     var ROOT_KEY = '__claudeUsageReticle';
-    var SCRIPT_VERSION = '3.3';
-    var BUILD_ID = '3.3-20260521-codex-autoreload';
+    var SCRIPT_VERSION = '3.4';
+    var BUILD_ID = '3.4-20260521-init-order-fix-and-zai-autoreload';
     var STYLE_ATTR = 'data-usage-reticle-style';
     var ITEM_ATTR = 'data-usage-reticle-item';
     var CONTROL_ATTR = 'data-usage-reticle-control';
@@ -73,7 +73,6 @@
     window[ROOT_KEY] = state;
 
     injectStyles();
-    init();
 
     function destroy() {
         if (state.scheduleId) clearTimeout(state.scheduleId);
@@ -156,13 +155,13 @@
         setupAutoReload();
     }
 
-    // MiniMax and Codex both show a stale snapshot until the page is reloaded
-    // (MiniMax has an explicit "refresh" button; Codex's analytics view only
-    // re-fetches on navigation). Auto-reload when the tab regains focus
+    // MiniMax, Codex, and Z.ai all show a stale snapshot until the page is
+    // reloaded — none of them re-fetch usage data without an explicit user
+    // action (MiniMax and Z.ai have on-page "refresh" buttons; Codex requires
+    // navigating away and back). Auto-reload when the tab regains focus
     // (debounced so a quick alt-tab doesn't trigger) and every ~10 minutes
-    // while the tab stays focused. Claude and Z.ai update reactively and are
-    // unaffected.
-    var AUTO_RELOAD_PLATFORMS = {minimax: true, codex: true};
+    // while the tab stays focused. Claude updates reactively and is excluded.
+    var AUTO_RELOAD_PLATFORMS = {minimax: true, codex: true, zai: true};
     function setupAutoReload() {
         var platform = currentPlatform();
         if (!platform || !AUTO_RELOAD_PLATFORMS[platform.id]) return;
@@ -1388,4 +1387,6 @@
 
         return true;
     }
+
+    init();
 })();
