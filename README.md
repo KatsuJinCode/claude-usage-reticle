@@ -121,9 +121,27 @@ The delta label color uses dynamic scaling:
 | `test-time-parsing.html` | Unit tests for time calculation |
 | `color-calibrator.html` | Development tool for tuning color scaling |
 
+## Releasing a new version
+
+The userscript and the browser extension are **two separate products** with their own version numbers. They share most of the same JS, but a change that only affects one side does not require bumping the other.
+
+**Userscript release** (`usage-reticle.user.js`)
+1. Bump `// @version` in the file header — Tampermonkey checks this to detect updates. **Don't skip this**: if you only bump the internal constants, installed copies will silently stay on the old version.
+2. Bump `SCRIPT_VERSION` and `BUILD_ID` constants in the IIFE body so the in-page debug label matches.
+
+**Extension release** (`extension/`)
+1. Bump `"version"` in `extension/manifest.json` — Chrome / Firefox use this to detect updates.
+2. If the shared JS body changed, mirror the changes into `extension/content/usage-reticle.content.js` and bump its `SCRIPT_VERSION` / `BUILD_ID` to the extension's new version.
+
+When the change is in shared code that affects both sides, do both releases in the same commit. The two version numbers are independent and do not need to match.
+
 ## Version History
 
-### v3.0 (Current)
+### Userscript v3.1 (Current)
+- Tampermonkey `@version` header was missed in the v3.0 release, so installed copies were never offered the update — bumped to 3.1 so update detection works again
+- No code changes; extension is unaffected and remains at 3.0.0
+
+### v3.0
 - Multi-platform: Codex, Z.ai, MiniMax handlers added alongside Claude
 - Platform router selects the right handler by hostname; each handler knows its own DOM hooks and reset-text format
 - Generic renderer respects fillDirection (e.g. Codex's bars represent "% remaining" not "% used")
