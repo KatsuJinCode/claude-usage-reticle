@@ -1,12 +1,9 @@
-// @run-at       document-idle
-// ==/UserScript==
-
 (function() {
     'use strict';
 
     var ROOT_KEY = '__claudeUsageReticle';
-    var SCRIPT_VERSION = '3.0';
-    var BUILD_ID = '3.0-20260520-multiplatform';
+    var SCRIPT_VERSION = '3.1';
+    var BUILD_ID = '3.1-20260521-userscript-extension-parity';
     var STYLE_ATTR = 'data-usage-reticle-style';
     var ITEM_ATTR = 'data-usage-reticle-item';
     var CONTROL_ATTR = 'data-usage-reticle-control';

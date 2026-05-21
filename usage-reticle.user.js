@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Claude Usage Reticle
 // @namespace    https://github.com/KatsuJinCode
-// @version      3.0
+// @version      3.1
 // @description  Visual usage tracker for Claude, Codex, Z.ai, MiniMax — see if you're OVER or UNDER budget
 // @author       KatsuJinCode, NemesisHubris, podfishapp
 // @match        https://claude.ai/*
@@ -20,8 +20,8 @@
     'use strict';
 
     var ROOT_KEY = '__claudeUsageReticle';
-    var SCRIPT_VERSION = '3.0';
-    var BUILD_ID = '3.0-20260520-multiplatform';
+    var SCRIPT_VERSION = '3.1';
+    var BUILD_ID = '3.1-20260521-userscript-extension-parity';
     var STYLE_ATTR = 'data-usage-reticle-style';
     var ITEM_ATTR = 'data-usage-reticle-item';
     var CONTROL_ATTR = 'data-usage-reticle-control';
