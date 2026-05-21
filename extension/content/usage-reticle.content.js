@@ -2,8 +2,8 @@
     'use strict';
 
     var ROOT_KEY = '__claudeUsageReticle';
-    var SCRIPT_VERSION = '3.1';
-    var BUILD_ID = '3.1-20260521-userscript-extension-parity';
+    var SCRIPT_VERSION = '3.1.0';
+    var BUILD_ID = '3.1.0-20260521-minimax-percent-fix-and-autorefresh';
     var STYLE_ATTR = 'data-usage-reticle-style';
     var ITEM_ATTR = 'data-usage-reticle-item';
     var CONTROL_ATTR = 'data-usage-reticle-control';
@@ -134,6 +134,50 @@
         on(window, 'hashchange', function() {
             scheduleRefresh(0);
         });
+
+        setupAutoReload();
+    }
+
+    // MiniMax shows stale usage numbers until you click their on-page refresh
+    // button. Auto-reload the page when the tab regains focus (debounced so a
+    // quick alt-tab doesn't trigger) and every ~10 minutes while the tab stays
+    // focused. MiniMax-only — other platforms update their numbers reactively.
+    function setupAutoReload() {
+        var platform = currentPlatform();
+        if (!platform || platform.id !== 'minimax') return;
+
+        var PAGE_LOAD_TIME = Date.now();
+        var FOCUS_MIN_AGE_MS = 60 * 1000;
+        var PERIODIC_AGE_MS = 10 * 60 * 1000;
+        var lastReloadAttempt = 0;
+
+        function tryReload() {
+            if (!platform.match() || !platform.isUsagePage()) return;
+            var now = Date.now();
+            if (now - PAGE_LOAD_TIME < FOCUS_MIN_AGE_MS) return;
+            if (now - lastReloadAttempt < 1000) return;
+            lastReloadAttempt = now;
+            location.reload();
+        }
+
+        on(document, 'visibilitychange', function() {
+            if (!document.hidden) tryReload();
+        });
+        on(window, 'focus', tryReload);
+
+        var periodicId;
+        function schedulePeriodic() {
+            periodicId = setTimeout(function tick() {
+                if (!document.hidden && document.hasFocus() &&
+                    Date.now() - PAGE_LOAD_TIME >= PERIODIC_AGE_MS) {
+                    tryReload();
+                    return;
+                }
+                periodicId = setTimeout(tick, 60 * 1000);
+            }, PERIODIC_AGE_MS);
+        }
+        schedulePeriodic();
+        state.cleanup.push(function() { if (periodicId) clearTimeout(periodicId); });
     }
 
     function scheduleRefresh(delay) {
@@ -344,8 +388,13 @@
                     var fill = track.querySelector('div[style*="width"]');
                     if (!fill) return;
                     var rowText = rowEl.textContent.replace(/\s+/g, ' ');
-                    var pctMatch = rowText.match(/(\d+)%\s*Used/i);
-                    if (!pctMatch) return;
+                    // The displayed "N / M" denominator runs straight into the
+                    // "P% Used" span with no whitespace ("...33 / 10033% Used"),
+                    // so a greedy \d+ on the row text grabs "10033". Read the
+                    // canonical percent from the fill bar's own style.width.
+                    var widthMatch = (fill.style.width || '').match(/([\d.]+)%/);
+                    if (!widthMatch) return;
+                    var percentUsed = parseFloat(widthMatch[1]);
                     var titlePart = (rowText.split(/Usage:/)[0] || '').trim();
                     var resetText, windowHours, isSession;
                     if (is5hBucket(rowText)) {
@@ -360,7 +409,7 @@
                     rows.push({
                         barElement: track,
                         label: titlePart.toLowerCase().slice(0, 60),
-                        percentUsed: parseInt(pctMatch[1], 10),
+                        percentUsed: percentUsed,
                         fillDirection: 'used',
                         resetText: resetText,
                         windowHours: windowHours,

@@ -137,9 +137,13 @@ When the change is in shared code that affects both sides, do both releases in t
 
 ## Version History
 
-### Userscript v3.1 (Current)
+### Userscript v3.2 / Extension v3.1.0 (Current)
+- MiniMax: usage percent is now read from the fill bar's own `style.width` instead of regex-matching the row text. The displayed "N / M" denominator runs straight into the "P% Used" span with no whitespace ("33 / 10033% Used"), and the old regex grabbed `10033`, clamping every row to 100% and producing nonsense "OVER" overlays
+- MiniMax: page now auto-reloads when the tab regains focus (debounced — ignored within 60s of last load) and again every ~10 minutes while focused. MiniMax requires manual refresh to get fresh usage numbers; other platforms update reactively and are unaffected
+
+### Userscript v3.1
 - Tampermonkey `@version` header was missed in the v3.0 release, so installed copies were never offered the update — bumped to 3.1 so update detection works again
-- No code changes; extension is unaffected and remains at 3.0.0
+- No code changes; extension was unaffected and stayed at 3.0.0
 
 ### v3.0
 - Multi-platform: Codex, Z.ai, MiniMax handlers added alongside Claude
