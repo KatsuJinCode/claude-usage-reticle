@@ -473,7 +473,7 @@
     'use strict';
 
     var ROOT_KEY = '__claudeUsageReticle';
-    var BUILD_ID = '2.5-20260501-bookmarklet-clean';
+    var BUILD_ID = '2.6-20260520-hash-route';
     var STYLE_ATTR = 'data-usage-reticle-style';
     var ITEM_ATTR = 'data-usage-reticle-item';
     var CONTROL_ATTR = 'data-usage-reticle-control';
@@ -753,7 +753,10 @@
     }
 
     function addReticles() {
-        if (!/(?:^|\.)claude\.ai$/.test(location.hostname) || !/\/settings\/usage/.test(location.pathname)) {
+        if (!/(?:^|\.)claude\.ai$/.test(location.hostname)) return 0;
+        // Settings is now a hash-routed modal on /new; accept either the legacy
+        // path form or the hash form so the bookmarklet keeps working.
+        if (!/\/settings\/usage/.test(location.pathname) && !/#\/?settings\/usage/.test(location.hash)) {
             return 0;
         }
         var added = 0;

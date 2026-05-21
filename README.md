@@ -114,7 +114,14 @@ The delta label color uses dynamic scaling:
 
 ## Version History
 
-### v2.5 (Current)
+### v2.6 (Current)
+- Handles Anthropic's settings-as-hash-routed-modal redesign (`/new#settings/usage`)
+- Userscript `@match` and extension content-script matches broadened to `claude.ai/*`
+- `isUsagePage()` accepts both legacy path and hash forms
+- Added `hashchange` listener so reticles attach/detach with in-app settings tabs
+- Per-bar signature cache now requires at least one reticle child to count as a hit, so React's reconciliation of weekly bars no longer leaves bars un-reticled
+
+### v2.5
 - Added a dedicated Manifest V3 browser extension package
 - Extension popup controls enable/disable and custom budget-window settings
 - Fixed Current session filtering for Claude's redesigned Usage page

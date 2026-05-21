@@ -2,8 +2,8 @@
   "manifest_version": 3,
   "name": "Claude Usage Reticle",
   "short_name": "Usage Reticle",
-  "version": "2.5.0",
-  "description": "Adds budget reticles to Claude usage bars on claude.ai/settings/usage.",
+  "version": "2.6.0",
+  "description": "Adds budget reticles to Claude usage bars on the claude.ai usage settings page.",
   "homepage_url": "https://github.com/KatsuJinCode/claude-usage-reticle",
   "icons": {
     "16": "icons/icon-16.png",
@@ -27,7 +27,7 @@
   },
   "content_scripts": [
     {
-      "matches": ["https://claude.ai/settings/*"],
+      "matches": ["https://claude.ai/*"],
       "js": ["content/usage-reticle.content.js"],
       "run_at": "document_idle"
     }

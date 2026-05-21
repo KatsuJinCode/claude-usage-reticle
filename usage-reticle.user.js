@@ -1,10 +1,10 @@
 // ==UserScript==
 // @name         Claude Usage Reticle
 // @namespace    https://github.com/KatsuJinCode
-// @version      2.5
+// @version      2.6
 // @description  Visual usage tracker showing time delta and percentage - see if you're OVER or UNDER budget
 // @author       KatsuJinCode, NemesisHubris, podfishapp
-// @match        https://claude.ai/settings/*
+// @match        https://claude.ai/*
 // @icon         https://claude.ai/favicon.ico
 // @grant        none
 // @license      MIT
@@ -17,8 +17,8 @@
     'use strict';
 
     var ROOT_KEY = '__claudeUsageReticle';
-    var SCRIPT_VERSION = '2.5';
-    var BUILD_ID = '2.5-20260501-stable-refresh';
+    var SCRIPT_VERSION = '2.6';
+    var BUILD_ID = '2.6-20260520-hash-route';
     var STYLE_ATTR = 'data-usage-reticle-style';
     var ITEM_ATTR = 'data-usage-reticle-item';
     var CONTROL_ATTR = 'data-usage-reticle-control';
@@ -143,6 +143,12 @@
         on(window, 'pageshow', function() {
             scheduleRefresh(0);
         });
+        // Hash-routed settings modal: a hashchange may toggle whether we're on the
+        // usage page without a corresponding DOM mutation, so trigger a refresh
+        // (which will also remove reticles when navigating away).
+        on(window, 'hashchange', function() {
+            scheduleRefresh(0);
+        });
     }
 
     function scheduleRefresh(delay) {
@@ -181,7 +187,12 @@
     }
 
     function isUsagePage() {
-        return !!document.body && /(?:^|\.)claude\.ai$/.test(location.hostname) && /\/settings\/usage/.test(location.pathname);
+        if (!document.body) return false;
+        if (!/(?:^|\.)claude\.ai$/.test(location.hostname)) return false;
+        // Settings is now a hash-routed modal on /new (and elsewhere). Accept both
+        // the legacy path form and the hash form so the script keeps working if
+        // Anthropic toggles routing strategies again.
+        return /\/settings\/usage/.test(location.pathname) || /#\/?settings\/usage/.test(location.hash);
     }
 
     function injectStyles() {
@@ -741,7 +752,12 @@
             state.settings.activeEnd
         ].join('|');
 
-        if (bar.getAttribute(SIGNATURE_ATTR) === signature) return true;
+        // React's reconciler can wipe the reticle children we appended while leaving
+        // the SIGNATURE_ATTR on the bar element intact (attributes survive
+        // reconciliation in a way that injected children do not). Treat the cache
+        // as hit only when BOTH the signature matches AND at least one reticle
+        // child is still present; otherwise fall through to a full re-render.
+        if (bar.getAttribute(SIGNATURE_ATTR) === signature && bar.querySelector('[' + ITEM_ATTR + ']')) return true;
         clearBar(bar);
         bar.setAttribute(SIGNATURE_ATTR, signature);
 
