@@ -1,12 +1,14 @@
 # Claude Usage Reticle
 
-A pace tracker for Claude usage limits. It overlays Claude's Usage page with a reticle that compares your actual usage against where you would be if you spread that limit evenly across the reset window.
+A pace tracker for AI coding-assistant usage limits. It overlays each provider's usage page with reticles that compare your actual usage against where you would be if you spread that limit evenly across the reset window.
+
+As of v3.0 it works across multiple providers: **Claude**, **Codex** (ChatGPT), **Z.ai**, and **MiniMax**. The repo name keeps "claude" for historical reasons.
 
 ![Claude usage tracker with reticles](demo_images/usage-tracker.png)
 
 ## What It Does
 
-Adds two markers to supported Claude usage bars (`Settings > Usage`):
+Adds two markers to each supported usage bar:
 
 1. **Blue usage marker** - Shows where your current usage sits, converted to an equivalent time in the reset window
 2. **Delta marker** - Shows how far OVER or UNDER the expected pace is
@@ -21,11 +23,18 @@ Adds two markers to supported Claude usage bars (`Settings > Usage`):
 
 If your label shows `1d 5h OVER (15%)`, it means your usage is 15 percentage points ahead of the even-spend pace, equivalent to about 1 day and 5 hours of active window time.
 
-Works with:
-- Current session (5-hour window)
-- All models (weekly)
-- Sonnet only (weekly)
-- Other weekly bars that share the weekly reset window
+### Supported pages
+
+| Provider | URL | Notes |
+|---|---|---|
+| Claude | `claude.ai` → Settings → Usage | Reticles on Current session + Weekly bars. Settings panel for active-window (days + hours). |
+| Codex | `chatgpt.com/codex/cloud/settings/analytics` | Reticles on 5h + Weekly usage limit cards (incl. GPT-5.3-Codex-Spark). |
+| Z.ai | `z.ai/manage-apikey/subscription` (click Usage tab) | Reticles on Weekly + Monthly quotas. 5 Hours Quota row not reticled — Z.ai does not expose a reset timestamp for the rolling 5h window. |
+| MiniMax | `platform.minimax.io/user-center/payment/token-plan` | Reticles on each Current Usage row (Text Gen, Audio, Video, Music, etc.). Newer plans add a weekly-limit row whose DOM hasn't been verified — open an issue if you have one and the reticle is missing. |
+
+### Want another provider?
+
+Open an issue at [github.com/KatsuJinCode/claude-usage-reticle/issues](https://github.com/KatsuJinCode/claude-usage-reticle/issues) with: a screenshot of the page showing the usage bar(s), the URL, and a snippet of the DOM around one bar (right-click → Inspect → copy outer HTML). If the bar layout is similar to one of the existing handlers, I can add support.
 
 ## Installation
 
@@ -114,7 +123,15 @@ The delta label color uses dynamic scaling:
 
 ## Version History
 
-### v2.6 (Current)
+### v3.0 (Current)
+- Multi-platform: Codex, Z.ai, MiniMax handlers added alongside Claude
+- Platform router selects the right handler by hostname; each handler knows its own DOM hooks and reset-text format
+- Generic renderer respects fillDirection (e.g. Codex's bars represent "% remaining" not "% used")
+- Forces `overflow: visible !important` on the bar so providers using utility-CSS `overflow-hidden` don't clip the reticle children
+- Userscript `@match` and extension `content_scripts.matches` narrowed per-platform: `claude.ai/*`, `chatgpt.com/codex/*`, `z.ai/manage-apikey/*`, `platform.minimax.io/user-center/*`
+- Active-window settings panel + day-boundary markers remain Claude-only for v3.0; other platforms render the basic three reticles only
+
+### v2.6
 - Handles Anthropic's settings-as-hash-routed-modal redesign (`/new#settings/usage`)
 - Userscript `@match` and extension content-script matches broadened to `claude.ai/*`
 - `isUsagePage()` accepts both legacy path and hash forms

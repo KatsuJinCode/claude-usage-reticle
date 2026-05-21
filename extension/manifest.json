@@ -2,8 +2,8 @@
   "manifest_version": 3,
   "name": "Claude Usage Reticle",
   "short_name": "Usage Reticle",
-  "version": "2.6.0",
-  "description": "Adds budget reticles to Claude usage bars on the claude.ai usage settings page.",
+  "version": "3.0.0",
+  "description": "Adds budget reticles to usage bars across Claude, Codex, Z.ai, and MiniMax.",
   "homepage_url": "https://github.com/KatsuJinCode/claude-usage-reticle",
   "icons": {
     "16": "icons/icon-16.png",
@@ -27,7 +27,12 @@
   },
   "content_scripts": [
     {
-      "matches": ["https://claude.ai/*"],
+      "matches": [
+        "https://claude.ai/*",
+        "https://chatgpt.com/codex/*",
+        "https://z.ai/manage-apikey/*",
+        "https://platform.minimax.io/user-center/*"
+      ],
       "js": ["content/usage-reticle.content.js"],
       "run_at": "document_idle"
     }

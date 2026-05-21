@@ -1,10 +1,13 @@
 // ==UserScript==
 // @name         Claude Usage Reticle
 // @namespace    https://github.com/KatsuJinCode
-// @version      2.6
-// @description  Visual usage tracker showing time delta and percentage - see if you're OVER or UNDER budget
+// @version      3.0
+// @description  Visual usage tracker for Claude, Codex, Z.ai, MiniMax — see if you're OVER or UNDER budget
 // @author       KatsuJinCode, NemesisHubris, podfishapp
 // @match        https://claude.ai/*
+// @match        https://chatgpt.com/codex/*
+// @match        https://z.ai/manage-apikey/*
+// @match        https://platform.minimax.io/user-center/*
 // @icon         https://claude.ai/favicon.ico
 // @grant        none
 // @license      MIT
@@ -17,8 +20,8 @@
     'use strict';
 
     var ROOT_KEY = '__claudeUsageReticle';
-    var SCRIPT_VERSION = '2.6';
-    var BUILD_ID = '2.6-20260520-hash-route';
+    var SCRIPT_VERSION = '3.0';
+    var BUILD_ID = '3.0-20260520-multiplatform';
     var STYLE_ATTR = 'data-usage-reticle-style';
     var ITEM_ATTR = 'data-usage-reticle-item';
     var CONTROL_ATTR = 'data-usage-reticle-control';
@@ -186,13 +189,224 @@
         return false;
     }
 
+    // Each platform describes how to recognise its usage page and where the bars
+    // live. Claude is handled by the legacy code path further down (settings panel +
+    // active-window markers); the other three platforms go through renderForPlatform
+    // which uses a generic bar renderer and ignores active-window settings.
+    var platforms = {
+        claude: {
+            id: 'claude',
+            supportsActiveWindow: true,
+            match: function() { return /(?:^|\.)claude\.ai$/.test(location.hostname); },
+            isUsagePage: function() {
+                return /\/settings\/usage/.test(location.pathname) || /#\/?settings\/usage/.test(location.hash);
+            }
+        },
+        codex: {
+            id: 'codex',
+            supportsActiveWindow: false,
+            match: function() { return location.hostname === 'chatgpt.com'; },
+            isUsagePage: function() {
+                return /^\/codex\/cloud\/settings\/analytics/.test(location.pathname);
+            },
+            findUsageRows: function() {
+                var rows = [];
+                var seen = [];
+                Array.from(document.querySelectorAll('article')).forEach(function(article) {
+                    var articleText = (article.textContent || '').replace(/\s+/g, ' ');
+                    var isHourly = /5\s*hour\s*usage\s*limit/i.test(articleText);
+                    var isWeekly = /Weekly\s*usage\s*limit/i.test(articleText);
+                    if (!isHourly && !isWeekly) return;
+                    var fill = article.querySelector('div[style*="width"][class*="bg-[#"]');
+                    if (!fill) return;
+                    var bar = fill.parentElement;
+                    if (!bar || seen.indexOf(bar) !== -1) return;
+                    seen.push(bar);
+                    var pctMatch = articleText.match(/(\d+)%\s*remaining/i);
+                    if (!pctMatch) return;
+                    var resetMatch = articleText.match(/Resets\s+(?:[A-Za-z]+\s+\d+,\s+\d{4}\s+)?\d+:\d+\s*(?:AM|PM)/i);
+                    rows.push({
+                        barElement: bar,
+                        label: isHourly ? '5 hour usage limit' : 'weekly usage limit',
+                        percentUsed: 100 - parseInt(pctMatch[1], 10),
+                        fillDirection: 'remaining',
+                        resetText: resetMatch ? resetMatch[0] : '',
+                        windowHours: isHourly ? 5 : 168,
+                        isSession: isHourly
+                    });
+                });
+                return rows;
+            },
+            parseReset: function(text) {
+                if (!text) return null;
+                var full = text.match(/Resets\s+(\w+)\s+(\d+),\s+(\d{4})\s+(\d+):(\d+)\s*(AM|PM)/i);
+                if (full) {
+                    var months = {jan:0, feb:1, mar:2, apr:3, may:4, jun:5, jul:6, aug:7, sep:8, oct:9, nov:10, dec:11};
+                    var hour = parseInt(full[4], 10);
+                    if (full[6].toUpperCase() === 'PM' && hour !== 12) hour += 12;
+                    if (full[6].toUpperCase() === 'AM' && hour === 12) hour = 0;
+                    var reset = new Date(parseInt(full[3], 10), months[full[1].toLowerCase().slice(0, 3)], parseInt(full[2], 10), hour, parseInt(full[5], 10), 0, 0);
+                    return {reset: reset, hrsUntil: (reset - new Date()) / 3600000};
+                }
+                var time = text.match(/Resets\s+(\d+):(\d+)\s*(AM|PM)/i);
+                if (time) {
+                    var h = parseInt(time[1], 10);
+                    if (time[3].toUpperCase() === 'PM' && h !== 12) h += 12;
+                    if (time[3].toUpperCase() === 'AM' && h === 12) h = 0;
+                    var now = new Date();
+                    var resetT = new Date(now);
+                    resetT.setHours(h, parseInt(time[2], 10), 0, 0);
+                    if (resetT <= now) resetT.setDate(resetT.getDate() + 1);
+                    return {reset: resetT, hrsUntil: (resetT - now) / 3600000};
+                }
+                return null;
+            }
+        },
+        zai: {
+            id: 'zai',
+            supportsActiveWindow: false,
+            match: function() { return location.hostname === 'z.ai'; },
+            isUsagePage: function() {
+                if (!/^\/manage-apikey/.test(location.pathname)) return false;
+                return !!document.querySelector('.subscription_usage-limit-card__M8soo');
+            },
+            findUsageRows: function() {
+                var card = document.querySelector('.subscription_usage-limit-card__M8soo');
+                if (!card) return [];
+                var rows = [];
+                Array.from(card.querySelectorAll('div[style*="width"][class*="bg-gradient"]')).forEach(function(fill) {
+                    var bar = fill.parentElement;            // the gray track
+                    if (!bar) return;
+                    var row = bar.parentElement;             // per-row container (title + % + bar + reset)
+                    if (!row) return;
+                    var rowText = row.textContent.replace(/\s+/g, ' ');
+                    var pctMatch = rowText.match(/(\d+)%\s*Used/i);
+                    if (!pctMatch) return;
+                    var resetMatch = rowText.match(/Reset\s*Time:\s*\d{4}-\d{1,2}-\d{1,2}\s+\d{1,2}:\d{1,2}/i);
+                    var windowHours = 168, isSession = false, label = 'weekly quota';
+                    if (/5\s*Hours\s*Quota/i.test(rowText)) { windowHours = 5; isSession = true; label = '5 hours quota'; }
+                    else if (/Monthly/i.test(rowText)) { windowHours = 720; label = 'monthly quota'; }
+                    rows.push({
+                        barElement: bar,
+                        label: label,
+                        percentUsed: parseInt(pctMatch[1], 10),
+                        fillDirection: 'used',
+                        resetText: resetMatch ? resetMatch[0] : '',
+                        windowHours: windowHours,
+                        isSession: isSession
+                    });
+                });
+                return rows;
+            },
+            parseReset: function(text) {
+                var m = text.match(/(\d{4})-(\d{1,2})-(\d{1,2})\s+(\d{1,2}):(\d{1,2})/);
+                if (!m) return null;
+                var reset = new Date(parseInt(m[1], 10), parseInt(m[2], 10) - 1, parseInt(m[3], 10), parseInt(m[4], 10), parseInt(m[5], 10), 0, 0);
+                return {reset: reset, hrsUntil: (reset - new Date()) / 3600000};
+            }
+        },
+        minimax: {
+            id: 'minimax',
+            supportsActiveWindow: false,
+            match: function() { return location.hostname === 'platform.minimax.io'; },
+            isUsagePage: function() {
+                return /^\/user-center/.test(location.pathname);
+            },
+            findUsageRows: function() {
+                // MiniMax buckets (per operator ground-truth 2026-05-20):
+                //   5h bucket  — Text Generation, Image Understanding, Web Search.
+                //                Image GENERATION is NOT here — it's media, 24h.
+                //                All three 5h rows share one rolling window. Text
+                //                Generation's displayed "Resets in N hr M min"
+                //                is the canonical truth; the other rows may show
+                //                stale/wrong values.
+                //   24h bucket — everything else (TTS, video, music, lyrics,
+                //                music cover, Image Generation). MiniMax's per-row
+                //                displayed reset is unreliable ("20 hr" when
+                //                reality is "12 hr 18 min"). The actual reset is
+                //                fixed at 12:00 PM Eastern / 9:00 AM Pacific,
+                //                computed from the wall clock — DO NOT trust the
+                //                per-row text for these.
+                var rowEls = Array.from(document.querySelectorAll('div[class*="bg-[#F7F8FA]"]'));
+                // Image Understanding must match BEFORE Image Generation falls
+                // through to the 24h default. Using a strict word-boundary regex
+                // so "Image Generation" never matches the Understanding clause.
+                var is5hBucket = function(t) { return /Text\s+Generation|Image\s+Understanding|Web\s+Search/i.test(t); };
+                var fiveHourResetText = '';
+                rowEls.forEach(function(rowEl) {
+                    if (fiveHourResetText) return;
+                    var rowText = rowEl.textContent.replace(/\s+/g, ' ');
+                    if (!/Text\s+Generation/i.test(rowText)) return;
+                    var rm = rowText.match(/Resets\s+in\s+(?:\d+\s*hr)?\s*(?:\d+\s*min)?/i);
+                    if (rm) fiveHourResetText = rm[0];
+                });
+                var dailyResetText = (function() {
+                    try {
+                        var now = new Date();
+                        var tzPart = new Intl.DateTimeFormat('en-US', {timeZone: 'America/Los_Angeles', timeZoneName: 'shortOffset'}).formatToParts(now).find(function(p){return p.type === 'timeZoneName';});
+                        var offsetMatch = (tzPart && tzPart.value || '').match(/GMT([+-])(\d{1,2})/);
+                        if (!offsetMatch) return '';
+                        var offset = parseInt(offsetMatch[2], 10) * (offsetMatch[1] === '+' ? 1 : -1);
+                        var nineamPtInUtc = ((9 - offset) % 24 + 24) % 24;
+                        var reset = new Date(now);
+                        reset.setUTCHours(nineamPtInUtc, 0, 0, 0);
+                        if (reset <= now) reset.setUTCDate(reset.getUTCDate() + 1);
+                        var totalMin = Math.round((reset - now) / 60000);
+                        return 'Resets in ' + Math.floor(totalMin / 60) + ' hr ' + (totalMin % 60) + ' min';
+                    } catch (err) { return ''; }
+                })();
+                var rows = [];
+                rowEls.forEach(function(rowEl) {
+                    var track = rowEl.querySelector('div[class*="bg-[#F2F3F5]"]');
+                    if (!track) return;
+                    var fill = track.querySelector('div[style*="width"]');
+                    if (!fill) return;
+                    var rowText = rowEl.textContent.replace(/\s+/g, ' ');
+                    var pctMatch = rowText.match(/(\d+)%\s*Used/i);
+                    if (!pctMatch) return;
+                    var titlePart = (rowText.split(/Usage:/)[0] || '').trim();
+                    var resetText, windowHours, isSession;
+                    if (is5hBucket(rowText)) {
+                        resetText = fiveHourResetText;
+                        windowHours = 5;
+                        isSession = true;
+                    } else {
+                        resetText = dailyResetText;
+                        windowHours = 24;
+                        isSession = false;
+                    }
+                    rows.push({
+                        barElement: track,
+                        label: titlePart.toLowerCase().slice(0, 60),
+                        percentUsed: parseInt(pctMatch[1], 10),
+                        fillDirection: 'used',
+                        resetText: resetText,
+                        windowHours: windowHours,
+                        isSession: isSession
+                    });
+                });
+                return rows;
+            },
+            parseReset: function(text) {
+                var m = text.match(/in\s+(?:(\d+)\s*hr)?\s*(?:(\d+)\s*min)?/i);
+                if (!m || (!m[1] && !m[2])) return null;
+                var hrsUntil = parseInt(m[1] || 0, 10) + parseInt(m[2] || 0, 10) / 60;
+                return {reset: new Date(Date.now() + hrsUntil * 3600000), hrsUntil: hrsUntil};
+            }
+        }
+    };
+
+    function currentPlatform() {
+        for (var k in platforms) {
+            if (platforms[k].match()) return platforms[k];
+        }
+        return null;
+    }
+
     function isUsagePage() {
         if (!document.body) return false;
-        if (!/(?:^|\.)claude\.ai$/.test(location.hostname)) return false;
-        // Settings is now a hash-routed modal on /new (and elsewhere). Accept both
-        // the legacy path form and the hash form so the script keeps working if
-        // Anthropic toggles routing strategies again.
-        return /\/settings\/usage/.test(location.pathname) || /#\/?settings\/usage/.test(location.hash);
+        var p = currentPlatform();
+        return !!p && p.isUsagePage();
     }
 
     function injectStyles() {
@@ -988,6 +1202,12 @@
 
         notifyExtension(true);
 
+        // Non-Claude platforms: simpler renderer, no settings panel, no active-window.
+        var platform = currentPlatform();
+        if (platform && platform.id !== 'claude') {
+            return finishRender(renderForPlatform(platform));
+        }
+
         renderControls(findControlsAnchor());
 
         var added = 0;
@@ -1015,5 +1235,105 @@
         });
 
         return finishRender(added);
+    }
+
+    function renderForPlatform(platform) {
+        var rows = (typeof platform.findUsageRows === 'function') ? (platform.findUsageRows() || []) : [];
+        var added = 0;
+        rows.forEach(function(row) {
+            if (!row || !row.barElement) return;
+            var resetInfo = (typeof platform.parseReset === 'function') ? platform.parseReset(row.resetText || '') : null;
+            if (!resetInfo) return;
+            if (renderGenericBar(row, resetInfo)) added++;
+        });
+        return added;
+    }
+
+    function renderGenericBar(row, resetInfo) {
+        var bar = row.barElement;
+        var usagePos = clampPct(row.percentUsed);
+        var metrics = getBudgetMetrics(row.windowHours, resetInfo, false);
+        var nowPos = metrics.nowPos;
+        var diffPct = usagePos - nowPos;
+        var color = getColor(diffPct);
+        var raw = Math.min(Math.abs(diffPct) / 100 * 2, 1);
+        var intensity = 0.35 + 0.65 * raw;
+
+        // Bar-coordinate mapping respects fillDirection: "remaining" platforms (Codex)
+        // have bars that fill left-to-right with what's LEFT, so a "% used" position
+        // becomes (100 - %used) on the bar.
+        var flip = row.fillDirection === 'remaining';
+        var toBar = function(pct) { return flip ? (100 - pct) : pct; };
+
+        var signature = [
+            Math.round(usagePos * 10),
+            Math.round(nowPos * 10),
+            Math.round(diffPct * 10),
+            Math.round(metrics.totalHours * 10),
+            Math.round(resetInfo.reset.getTime() / 60000),
+            row.fillDirection || 'used'
+        ].join('|');
+
+        if (bar.getAttribute(SIGNATURE_ATTR) === signature && bar.querySelector('[' + ITEM_ATTR + ']')) return true;
+        clearBar(bar);
+        bar.setAttribute(SIGNATURE_ATTR, signature);
+
+        if (getComputedStyle(bar).position === 'static') bar.style.position = 'relative';
+        // MiniMax (and possibly others) ship overflow-hidden with !important via their
+        // utility-CSS framework, which clips our absolutely-positioned children. Force
+        // the override with !important so the reticles render outside the bar bounds.
+        bar.style.setProperty('overflow', 'visible', 'important');
+
+        var usageTime = metrics.dateAtPct(usagePos);
+        var diffHrs = (diffPct / 100) * metrics.totalHours;
+
+        // Glow + overlay between nowPos and usagePos (in bar coordinates)
+        var nowOnBar = toBar(nowPos);
+        var usageOnBar = toBar(usagePos);
+        var overlayLeft = Math.min(nowOnBar, usageOnBar);
+        var overlayWidth = Math.abs(nowOnBar - usageOnBar);
+
+        if (overlayWidth > 0.1) {
+            if (diffPct > 0) {
+                var glow = createItem('reticle-glow');
+                glow.style.left = overlayLeft + '%';
+                glow.style.width = overlayWidth + '%';
+                glow.style.boxShadow = '0 0 ' + (8 + intensity * 15) + 'px ' + (2 + intensity * 5) + 'px hsla(0,' + (50 + intensity * 30) + '%,' + (50 - intensity * 10) + '%,' + (0.4 + intensity * 0.4) + ')';
+                bar.appendChild(glow);
+
+                var over = createItem('reticle-overlay');
+                over.style.left = overlayLeft + '%';
+                over.style.width = overlayWidth + '%';
+                over.style.background = 'hsla(0,' + (60 + intensity * 20) + '%,' + (40 - intensity * 10) + '%,' + (0.55 + intensity * 0.25) + ')';
+                bar.appendChild(over);
+            } else if (diffPct < 0) {
+                var under = createItem('reticle-overlay');
+                under.style.left = overlayLeft + '%';
+                under.style.width = overlayWidth + '%';
+                under.style.background = 'hsla(142,' + (40 + intensity * 30) + '%,' + (50 - intensity * 10) + '%,' + (0.4 + intensity * 0.35) + ')';
+                bar.appendChild(under);
+            }
+        }
+
+        var delta = createItem('delta-reticle');
+        delta.style.left = nowOnBar + '%';
+        delta.style.background = color;
+        delta.style.setProperty('--reticle-arrow-color', color);
+        var deltaLabel = document.createElement('div');
+        deltaLabel.className = 'delta-reticle-label';
+        deltaLabel.style.background = color;
+        deltaLabel.textContent = fmtDelta(diffHrs, diffPct);
+        delta.appendChild(deltaLabel);
+        bar.appendChild(delta);
+
+        var usage = createItem('usage-reticle');
+        usage.style.left = usageOnBar + '%';
+        var usageLabel = document.createElement('div');
+        usageLabel.className = 'usage-reticle-label';
+        usageLabel.textContent = fmtTime(usageTime, !!row.isSession);
+        usage.appendChild(usageLabel);
+        bar.appendChild(usage);
+
+        return true;
     }
 })();
