@@ -2,8 +2,8 @@
     'use strict';
 
     var ROOT_KEY = '__claudeUsageReticle';
-    var SCRIPT_VERSION = '3.1.0';
-    var BUILD_ID = '3.1.0-20260521-minimax-percent-fix-and-autorefresh';
+    var SCRIPT_VERSION = '3.2.0';
+    var BUILD_ID = '3.2.0-20260521-codex-autoreload';
     var STYLE_ATTR = 'data-usage-reticle-style';
     var ITEM_ATTR = 'data-usage-reticle-item';
     var CONTROL_ATTR = 'data-usage-reticle-control';
@@ -138,13 +138,16 @@
         setupAutoReload();
     }
 
-    // MiniMax shows stale usage numbers until you click their on-page refresh
-    // button. Auto-reload the page when the tab regains focus (debounced so a
-    // quick alt-tab doesn't trigger) and every ~10 minutes while the tab stays
-    // focused. MiniMax-only — other platforms update their numbers reactively.
+    // MiniMax and Codex both show a stale snapshot until the page is reloaded
+    // (MiniMax has an explicit "refresh" button; Codex's analytics view only
+    // re-fetches on navigation). Auto-reload when the tab regains focus
+    // (debounced so a quick alt-tab doesn't trigger) and every ~10 minutes
+    // while the tab stays focused. Claude and Z.ai update reactively and are
+    // unaffected.
+    var AUTO_RELOAD_PLATFORMS = {minimax: true, codex: true};
     function setupAutoReload() {
         var platform = currentPlatform();
-        if (!platform || platform.id !== 'minimax') return;
+        if (!platform || !AUTO_RELOAD_PLATFORMS[platform.id]) return;
 
         var PAGE_LOAD_TIME = Date.now();
         var FOCUS_MIN_AGE_MS = 60 * 1000;

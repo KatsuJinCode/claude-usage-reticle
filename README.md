@@ -137,7 +137,10 @@ When the change is in shared code that affects both sides, do both releases in t
 
 ## Version History
 
-### Userscript v3.2 / Extension v3.1.0 (Current)
+### Userscript v3.3 / Extension v3.2.0 (Current)
+- Extended the focus / 10-minute auto-reload to the Codex analytics page. Codex's view only re-fetches usage on navigation, so without this it shows the snapshot from when you first opened the tab
+
+### Userscript v3.2 / Extension v3.1.0
 - MiniMax: usage percent is now read from the fill bar's own `style.width` instead of regex-matching the row text. The displayed "N / M" denominator runs straight into the "P% Used" span with no whitespace ("33 / 10033% Used"), and the old regex grabbed `10033`, clamping every row to 100% and producing nonsense "OVER" overlays
 - MiniMax: page now auto-reloads when the tab regains focus (debounced — ignored within 60s of last load) and again every ~10 minutes while focused. MiniMax requires manual refresh to get fresh usage numbers; other platforms update reactively and are unaffected
 
