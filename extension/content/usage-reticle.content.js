@@ -2,8 +2,8 @@
     'use strict';
 
     var ROOT_KEY = '__claudeUsageReticle';
-    var SCRIPT_VERSION = '3.3.0';
-    var BUILD_ID = '3.3.0-20260521-init-order-fix-and-zai-autoreload';
+    var SCRIPT_VERSION = '3.4.0';
+    var BUILD_ID = '3.4.0-20260521-prefer-on-page-refresh-and-blue-used-segment';
     var STYLE_ATTR = 'data-usage-reticle-style';
     var ITEM_ATTR = 'data-usage-reticle-item';
     var CONTROL_ATTR = 'data-usage-reticle-control';
@@ -137,12 +137,12 @@
         setupAutoReload();
     }
 
-    // MiniMax, Codex, and Z.ai all show a stale snapshot until the page is
-    // reloaded — none of them re-fetch usage data without an explicit user
-    // action (MiniMax and Z.ai have on-page "refresh" buttons; Codex requires
-    // navigating away and back). Auto-reload when the tab regains focus
-    // (debounced so a quick alt-tab doesn't trigger) and every ~10 minutes
-    // while the tab stays focused. Claude updates reactively and is excluded.
+    // MiniMax, Codex, and Z.ai all show a stale snapshot until usage is
+    // re-fetched. MiniMax and Z.ai expose an on-page refresh button that
+    // re-fetches without navigating; we click that. Codex has no such button,
+    // so it falls back to a full page reload. Claude updates reactively and
+    // is excluded entirely. Triggered on focus return (debounced so a quick
+    // alt-tab doesn't fire) and every ~10 minutes while the tab stays focused.
     var AUTO_RELOAD_PLATFORMS = {minimax: true, codex: true, zai: true};
     function setupAutoReload() {
         var platform = currentPlatform();
@@ -159,6 +159,10 @@
             if (now - PAGE_LOAD_TIME < FOCUS_MIN_AGE_MS) return;
             if (now - lastReloadAttempt < 1000) return;
             lastReloadAttempt = now;
+            if (typeof platform.findRefreshButton === 'function') {
+                var btn = platform.findRefreshButton();
+                if (btn) { btn.click(); return; }
+            }
             location.reload();
         }
 
@@ -298,6 +302,13 @@
                 if (!/^\/manage-apikey/.test(location.pathname)) return false;
                 return !!document.querySelector('.subscription_usage-limit-card__M8soo');
             },
+            findRefreshButton: function() {
+                var btns = document.querySelectorAll('button');
+                for (var i = 0; i < btns.length; i++) {
+                    if ((btns[i].textContent || '').trim() === 'Refresh') return btns[i];
+                }
+                return null;
+            },
             findUsageRows: function() {
                 var card = document.querySelector('.subscription_usage-limit-card__M8soo');
                 if (!card) return [];
@@ -339,6 +350,16 @@
             match: function() { return location.hostname === 'platform.minimax.io'; },
             isUsagePage: function() {
                 return /^\/user-center/.test(location.pathname);
+            },
+            findRefreshButton: function() {
+                var headings = document.querySelectorAll('h2');
+                for (var i = 0; i < headings.length; i++) {
+                    if (/Current Usage/i.test(headings[i].textContent || '')) {
+                        var parent = headings[i].parentElement;
+                        return parent ? parent.querySelector('button') : null;
+                    }
+                }
+                return null;
             },
             findUsageRows: function() {
                 // MiniMax buckets (per operator ground-truth 2026-05-20):
@@ -1325,6 +1346,25 @@
         var usageOnBar = toBar(usagePos);
         var overlayLeft = Math.min(nowOnBar, usageOnBar);
         var overlayWidth = Math.abs(nowOnBar - usageOnBar);
+
+        // Blue "on-track used" segment: the portion of the bar that's been used
+        // up to the lesser of (now, usage). Only red/green is allowed between
+        // the two reticles; everything used to the left of that band must be
+        // blue. Without this overlay, the host page's native fill (MiniMax
+        // paints red on over-budget rows, green on under-budget rows) shows
+        // through and the eye reads the whole bar as that single color. Only
+        // applied for fillDirection === 'used' platforms; 'remaining' bars
+        // (Codex) have an inverted visual model and are left untouched.
+        if (!flip) {
+            var trackedWidth = Math.min(nowOnBar, usageOnBar);
+            if (trackedWidth > 0.1) {
+                var tracked = createItem('reticle-overlay');
+                tracked.style.left = '0%';
+                tracked.style.width = trackedWidth + '%';
+                tracked.style.background = 'hsla(217, 91%, 60%, 0.75)';
+                bar.appendChild(tracked);
+            }
+        }
 
         if (overlayWidth > 0.1) {
             if (diffPct > 0) {
