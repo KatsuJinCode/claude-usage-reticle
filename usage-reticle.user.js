@@ -480,7 +480,7 @@
                 // 1. Current/Hourly/Session Limit
                 var currentlyEl = document.querySelector('[data-test-id="gxu-currently"]') || document.querySelector('[data-testid="gxu-currently"]');
                 if (currentlyEl) {
-                    var bar = currentlyEl.querySelector('progress, div[role="progressbar"], div[class*="progressbar"]');
+                    var bar = currentlyEl.querySelector('.progress-track, progress, [role="progressbar"], [class*="progressbar"], [class*="progress-track"]');
                     if (!bar) {
                         bar = currentlyEl;
                     }
@@ -519,18 +519,13 @@
                     var fill;
                     if (!bar) {
                         bar = document.createElement('div');
-                        bar.className = 'gxu-weekly-bar-injected gxu-bar-injected';
-                        bar.style.width = '100%';
-                        bar.style.height = '8px';
-                        bar.style.borderRadius = '4px';
-                        bar.style.marginTop = '8px';
+                        bar.className = 'gxu-weekly-bar-injected progress-track progress-track-luminous';
                         bar.style.position = 'relative';
                         bar.style.overflow = 'visible';
+                        bar.style.marginTop = '8px';
 
                         fill = document.createElement('div');
-                        fill.className = 'gxu-weekly-bar-fill gxu-bar-fill';
-                        fill.style.height = '100%';
-                        fill.style.borderRadius = '4px';
+                        fill.className = 'gxu-weekly-bar-fill progress-indicator progress-indicator-luminous';
                         fill.style.width = '0%';
 
                         bar.appendChild(fill);
@@ -539,13 +534,7 @@
                         fill = bar.querySelector('.gxu-weekly-bar-fill');
                     }
 
-                    // Style matching current theme
-                    var theme = detectTheme();
-                    var fillBg = theme === 'dark' ? '#8ab4f8' : '#1a73e8';
-                    var trackBg = theme === 'dark' ? '#3c4043' : '#e8eaed';
-                    bar.style.background = trackBg;
                     if (fill) {
-                        fill.style.background = fillBg;
                         fill.style.width = (pct !== null ? pct : 0) + '%';
                     }
 
@@ -919,8 +908,10 @@
 
     function parseResetInfo(text) {
         if (!text) return null;
+        text = normalizeText(text).toLowerCase();
 
-        var relative = text.match(/(?:resets?\s*)?in\s*(?:(\d+)\s*d(?:ay)?s?)?\s*(?:(\d+)\s*h(?:ou)?rs?)?\s*(?:(\d+)\s*m(?:in(?:ute)?s?)?)?/i);
+        // 1. Relative "in X hrs Y mins"
+        var relative = text.match(/(?:resets?\s*)?in\s*(?:(\d+)\s*d(?:ay)?s?)?\s*(?:(\d+)\s*h(?:ou)?rs?)?\s*(?:(\d+)\s*m(?:in(?:ute)?s?)?)?/);
         if (relative && (relative[1] || relative[2] || relative[3])) {
             var hrsUntil = (parseInt(relative[1] || 0, 10) * 24) +
                            parseInt(relative[2] || 0, 10) +
@@ -931,26 +922,79 @@
             };
         }
 
-        var absolute = text.match(/(?:resets?\s*)?(sun|mon|tue|wed|thu|fri|sat)\w*\s+(\d+):(\d+)\s*(am|pm)/i);
-        if (!absolute) return null;
+        // 2. Absolute month + day: "Resets Jun 2 at 12:58 AM"
+        var absMonthDay = text.match(/(?:resets?\s*)?(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\w*\s+(\d+)(?:\s*,?\s*\d{4})?\s*(?:at\s+)?(\d+):(\d+)\s*(am|pm)?/);
+        if (absMonthDay) {
+            var monthName = absMonthDay[1].slice(0, 3);
+            var MONTH_INDEX = {jan:0, feb:1, mar:2, apr:3, may:4, jun:5, jul:6, aug:7, sep:8, oct:9, nov:10, dec:11};
+            var month = MONTH_INDEX[monthName];
+            var day = parseInt(absMonthDay[2], 10);
+            var hour = parseInt(absMonthDay[3], 10);
+            var min = parseInt(absMonthDay[4], 10);
+            var ampm = absMonthDay[5] ? absMonthDay[5] : null;
 
-        var hour = parseInt(absolute[2], 10);
-        if (absolute[4].toLowerCase() === 'pm' && hour !== 12) hour += 12;
-        if (absolute[4].toLowerCase() === 'am' && hour === 12) hour = 0;
+            if (ampm === 'pm' && hour !== 12) hour += 12;
+            if (ampm === 'am' && hour === 12) hour = 0;
 
-        var now = new Date();
-        var reset = new Date(now);
-        reset.setHours(hour, parseInt(absolute[3], 10), 0, 0);
+            var now = new Date();
+            var reset = new Date(now.getFullYear(), month, day, hour, min, 0, 0);
+            // If the reset date is in the past by too much, e.g. next year boundary
+            if (reset < now && (now - reset) > 30 * 24 * 3600 * 1000) {
+                reset.setFullYear(now.getFullYear() + 1);
+            }
+            return {
+                hrsUntil: (reset - now) / 3600000,
+                reset: reset
+            };
+        }
 
-        var deltaDays = DAY_INDEX[absolute[1].toLowerCase().slice(0, 3)] - now.getDay();
-        if (deltaDays < 0) deltaDays += 7;
-        if (deltaDays === 0 && reset <= now) deltaDays = 7;
-        reset.setDate(now.getDate() + deltaDays);
+        // 3. Absolute weekday + time: "Resets Sat 10:59 AM"
+        var absWeekday = text.match(/(?:resets?\s*)?(sun|mon|tue|wed|thu|fri|sat)\w*\s+(\d+):(\d+)\s*(am|pm)/);
+        if (absWeekday) {
+            var hour = parseInt(absWeekday[2], 10);
+            var ampm = absWeekday[4];
+            if (ampm === 'pm' && hour !== 12) hour += 12;
+            if (ampm === 'am' && hour === 12) hour = 0;
 
-        return {
-            hrsUntil: (reset - now) / 3600000,
-            reset: reset
-        };
+            var now = new Date();
+            var reset = new Date(now);
+            reset.setHours(hour, parseInt(absWeekday[3], 10), 0, 0);
+
+            var deltaDays = DAY_INDEX[absWeekday[1].slice(0, 3)] - now.getDay();
+            if (deltaDays < 0) deltaDays += 7;
+            if (deltaDays === 0 && reset <= now) deltaDays = 7;
+            reset.setDate(now.getDate() + deltaDays);
+
+            return {
+                hrsUntil: (reset - now) / 3600000,
+                reset: reset
+            };
+        }
+
+        // 4. Time only: "Resets at 5:58 PM"
+        var absTimeOnly = text.match(/(?:resets?\s*at\s+)?(\d+):(\d+)\s*(am|pm)/);
+        if (absTimeOnly) {
+            var hour = parseInt(absTimeOnly[1], 10);
+            var ampm = absTimeOnly[3];
+            if (ampm === 'pm' && hour !== 12) hour += 12;
+            if (ampm === 'am' && hour === 12) hour = 0;
+
+            var now = new Date();
+            var reset = new Date(now);
+            reset.setHours(hour, parseInt(absTimeOnly[2], 10), 0, 0);
+
+            // If the reset time is in the past, it might be tomorrow's reset
+            if (reset <= now && (now - reset) > 2 * 3600 * 1000) {
+                reset.setDate(now.getDate() + 1);
+            }
+
+            return {
+                hrsUntil: (reset - now) / 3600000,
+                reset: reset
+            };
+        }
+
+        return null;
     }
 
     function findResetInfo(root) {
