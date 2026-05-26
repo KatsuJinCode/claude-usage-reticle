@@ -460,8 +460,24 @@
 
                 // 1. Current/Hourly/Session Limit
                 var currentlyEl = document.querySelector('[data-test-id="gxu-currently"]') || document.querySelector('[data-testid="gxu-currently"]');
+                var currentlyTrack = null;
+                var currentlyIndicator = null;
+                var currentlyHeader = null;
+                var currentlyTitleWrapper = null;
+                var currentlyTitle = null;
+                var currentlyPercentText = null;
+                var currentlyResetText = null;
+
                 if (currentlyEl) {
-                    var bar = currentlyEl.querySelector('.progress-track, progress, [role="progressbar"], [class*="progressbar"], [class*="progress-track"]');
+                    currentlyTrack = currentlyEl.querySelector('.progress-track');
+                    currentlyIndicator = currentlyEl.querySelector('.progress-indicator');
+                    currentlyHeader = currentlyEl.querySelector('.gxu-item-header');
+                    currentlyTitleWrapper = currentlyEl.querySelector('.current-usage');
+                    currentlyTitle = currentlyEl.querySelector('.current-usage p');
+                    currentlyPercentText = currentlyEl.querySelector('.gxu-item-header > p');
+                    currentlyResetText = currentlyEl.querySelector('.reset-time-luminous');
+
+                    var bar = currentlyTrack || currentlyEl.querySelector('progress, [role="progressbar"], [class*="progressbar"]');
                     if (!bar) {
                         bar = currentlyEl;
                     }
@@ -493,45 +509,99 @@
                 // 2. Weekly Limit
                 var weeklyEl = document.querySelector('[data-test-id="gxu-weekly"]') || document.querySelector('[data-testid="gxu-weekly"]');
                 if (weeklyEl) {
-                    var pct = parsePercentFromElement(weeklyEl);
+                    weeklyEl.style.setProperty('flex-direction', 'column', 'important');
 
-                    // Inject or update our weekly progress bar
-                    var bar = weeklyEl.querySelector('.gxu-weekly-bar-injected');
-                    var fill;
-                    if (!bar) {
+                    var nativeWrapper = weeklyEl.querySelector('.gxu-weekly-native-hidden');
+                    if (!nativeWrapper) {
+                        nativeWrapper = document.createElement('div');
+                        nativeWrapper.className = 'gxu-weekly-native-hidden';
+                        nativeWrapper.style.setProperty('display', 'none', 'important');
+                        while (weeklyEl.firstChild) {
+                            nativeWrapper.appendChild(weeklyEl.firstChild);
+                        }
+                        weeklyEl.appendChild(nativeWrapper);
+                    }
+
+                    var pct = parsePercentFromElement(nativeWrapper);
+                    var resetBlock = findResetBlock(nativeWrapper) || { resetEl: nativeWrapper };
+                    var resetText = resetBlock.resetEl ? resetBlock.resetEl.textContent : '';
+                    if (!/resets?/i.test(resetText)) {
+                        // Fallback absolute reset for weekly limit
+                        resetText = 'Resets Sat 10:59 AM';
+                    }
+
+                    var card = weeklyEl.querySelector('.gxu-weekly-card-injected');
+                    var percentText, resetTextEl, bar, fill;
+                    if (!card) {
+                        card = document.createElement('div');
+                        card.className = 'gxu-weekly-card-injected';
+                        card.style.width = '100%';
+                        card.style.display = 'flex';
+                        card.style.flexDirection = 'column';
+                        copyScopeAttributes(weeklyEl, card);
+
+                        // Header
+                        var header = document.createElement('div');
+                        header.className = 'gxu-item-header';
+                        copyScopeAttributes(currentlyHeader, header);
+
+                        var titleWrapper = document.createElement('div');
+                        titleWrapper.className = 'current-usage';
+                        copyScopeAttributes(currentlyTitleWrapper, titleWrapper);
+
+                        var title = document.createElement('p');
+                        title.className = 'gds-emphasized-body-l';
+                        title.textContent = 'Weekly limit';
+                        copyScopeAttributes(currentlyTitle, title);
+
+                        titleWrapper.appendChild(title);
+                        header.appendChild(titleWrapper);
+
+                        percentText = document.createElement('p');
+                        percentText.className = 'gds-emphasized-body-l gxu-weekly-percent-text';
+                        copyScopeAttributes(currentlyPercentText, percentText);
+                        header.appendChild(percentText);
+
+                        card.appendChild(header);
+
+                        // Progress track
                         bar = document.createElement('div');
                         bar.className = 'gxu-weekly-bar-injected progress-track progress-track-luminous';
                         bar.style.position = 'relative';
                         bar.style.overflow = 'visible';
                         bar.style.marginTop = '8px';
+                        copyScopeAttributes(currentlyTrack, bar);
 
                         fill = document.createElement('div');
                         fill.className = 'gxu-weekly-bar-fill progress-indicator progress-indicator-luminous';
                         fill.style.width = '0%';
+                        copyScopeAttributes(currentlyIndicator, fill);
 
                         bar.appendChild(fill);
-                        weeklyEl.appendChild(bar);
+                        card.appendChild(bar);
+
+                        // Reset time
+                        resetTextEl = document.createElement('p');
+                        resetTextEl.className = 'gds-emphasized-body-m reset-time-luminous gxu-weekly-reset-text';
+                        copyScopeAttributes(currentlyResetText, resetTextEl);
+                        card.appendChild(resetTextEl);
+
+                        weeklyEl.appendChild(card);
                     } else {
-                        fill = bar.querySelector('.gxu-weekly-bar-fill');
+                        percentText = card.querySelector('.gxu-weekly-percent-text');
+                        bar = card.querySelector('.gxu-weekly-bar-injected');
+                        fill = card.querySelector('.gxu-weekly-bar-fill');
+                        resetTextEl = card.querySelector('.gxu-weekly-reset-text');
                     }
 
-                    // Copy Angular scoping attributes from currently card's progress bar to weekly card's progress bar
-                    if (currentlyEl) {
-                        var currentlyTrack = currentlyEl.querySelector('.progress-track');
-                        var currentlyIndicator = currentlyEl.querySelector('.progress-indicator');
-                        if (currentlyTrack) copyScopeAttributes(currentlyTrack, bar);
-                        if (currentlyIndicator) copyScopeAttributes(currentlyIndicator, fill);
+                    if (percentText) {
+                        percentText.textContent = (pct !== null ? pct : 0) + '% used';
                     }
-
                     if (fill) {
                         fill.style.width = (pct !== null ? pct : 0) + '%';
                     }
-
-                    var resetBlock = findResetBlock(bar) || { resetEl: weeklyEl };
-                    var resetText = resetBlock.resetEl ? resetBlock.resetEl.textContent : '';
-                    if (!/resets?/i.test(resetText)) {
-                        // Fallback absolute reset for weekly limit
-                        resetText = 'Resets Sat 10:59 AM';
+                    if (resetTextEl) {
+                        resetTextEl.textContent = resetText;
                     }
 
                     rows.push({
@@ -580,13 +650,22 @@
         return (text || '').replace(/\s+/g, ' ').trim();
     }
 
+    var currentScopeAttr = null;
+    var currentScopeVal = '';
+
     function copyScopeAttributes(src, dest) {
-        if (!src || !dest) return;
-        for (var i = 0; i < src.attributes.length; i++) {
-            var attr = src.attributes[i];
-            if (attr.name.indexOf('_ngcontent-') === 0) {
-                dest.setAttribute(attr.name, attr.value);
+        if (!dest) return;
+        if (src) {
+            for (var i = 0; i < src.attributes.length; i++) {
+                var attr = src.attributes[i];
+                if (attr.name.indexOf('_ngcontent-') === 0) {
+                    currentScopeAttr = attr.name;
+                    currentScopeVal = attr.value;
+                    dest.setAttribute(attr.name, attr.value);
+                }
             }
+        } else if (currentScopeAttr) {
+            dest.setAttribute(currentScopeAttr, currentScopeVal);
         }
     }
 
