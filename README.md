@@ -104,6 +104,10 @@ The delta label color uses dynamic scaling:
 | Custom windows | Weekly bars can compress expected pace into active days/hours (Extension only) |
 | Event-driven refresh | Updates on page changes, focus, and visibility changes |
 | Soft shadows | Text has soft drop shadow for readability |
+| Local Scraping & Logging | Opt-in toggle to log/save scraped usage stats to local/extension storage |
+| Customizable Refresh Slider | Range slider (5 to 120 minutes) to adjust auto-refresh rates (Gemini) |
+| Dynamic Layout Spacing | Automatically injects 26px vertical margins around progress tracks to prevent reticle labels from overlapping reset times or headers (Gemini, Codex, Z.ai, MiniMax) |
+| Cloned Weekly Limit Card | Deep-clones the hourly bar DOM structure on Gemini to guarantee absolute layout/style parity |
 
 ## Limitations
 

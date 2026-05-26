@@ -1,51 +1,45 @@
 # Claude Usage Visual Inject - Specification
 
 ## Goal
-Add a visual time-progress reticle overlay on Claude's Settings > Usage bars to show where usage SHOULD be based on current time in the weekly reset cycle.
+Add a visual time-progress reticle overlay on AI coding-assistant usage bars to show where usage SHOULD be based on current elapsed time in the reset cycle.
 
 ## Problem
-Claude's usage page shows:
-- Current usage as a percentage bar
-- Reset time (e.g., "Resets Sat 10:59 AM")
+Usage pages across providers show:
+- Current usage as a percentage or fraction bar
+- Reset time (e.g., "Resets Sat 10:59 AM" or rolling relative windows like 5 hours)
 
-But there's no visual indicator of whether you're ahead or behind your "budget". You have to mentally calculate whether 56% usage with X hours remaining is on track.
+But there is no visual indicator of whether you are ahead or behind your "budget". You have to mentally calculate whether your usage with the remaining hours is on track. In addition, many providers lack direct API endpoints for usage data, and their usage bars place text details directly above or below the track, causing injected absolute overlays to collide with or obscure critical reset text and headers.
 
 ## Solution
-A thin vertical line (reticle) overlaid on each usage bar showing the "target" position based on time elapsed in the week.
+A visual budget tracker that overlays:
+1. **Blue usage marker** - Shows where your current usage sits, converted to an equivalent time in the reset window.
+2. **Delta marker** - Shows how far OVER or UNDER the expected pace is, with color intensity scaling dynamically based on deviation (red glow for over-budget, green fill for under-budget).
 
-### Calculation
-```
-Week = 168 hours
-Target % = (hours_since_last_reset / 168) * 100
-```
+### Calculations
+- **Session/Hourly Limits (e.g., 5-hour rolling)**:
+  `Target % = (5 - hours_until_reset) / 5 * 100`
+- **Weekly Limits (e.g., 168-hour fixed)**:
+  `Target % = (168 - hours_until_reset) / 168 * 100`
 
-Example:
-- Week resets Saturday 10:59 AM
-- Current time: Wednesday 6:00 PM
-- Hours elapsed: ~103 hours
-- Target %: (103/168) * 100 ≈ 61%
-- Reticle appears at 61% mark on the bar
+### Collision-Free Layouts
+To ensure the absolute-positioned reticle labels (which sit 22px above/below the progress track) do not obscure surrounding labels, the system automatically injects a `26px` vertical margin around the progress track for all non-Claude platforms.
 
-### Visual Comparison
-- Usage bar BEHIND reticle → Under budget, have capacity
-- Usage bar AHEAD of reticle → Over budget, slow down
-- Usage bar AT reticle → On track
+## Multi-Provider Support
+The codebase is structured with a platform router targeting:
+1. **Claude** (`claude.ai`) - Settings -> Usage progress bars.
+2. **Codex** (`chatgpt.com/codex/cloud/settings/analytics`) - 5h + Weekly limits.
+3. **Z.ai** (`z.ai/manage-apikey/subscription`) - Weekly + Monthly quotas.
+4. **MiniMax** (`platform.minimax.io/user-center/payment/token-plan`) - Current Usage rows.
+5. **Google Gemini** (`gemini.google.com/usage`) - Current (hourly) + Weekly limit cards.
 
-## Implementation Approach
-Browser extension plus bookmarklet fallback that:
-1. Matches Claude Settings > Usage
-2. Finds usage bar elements in DOM
-3. Extracts reset time from text
-4. Calculates target position
-5. Injects CSS-positioned reticle overlay on each bar
-
-## Technical Details
-- Target URL: https://claude.ai/settings/usage (or similar)
-- Injection method: Manifest V3 content script or bookmarklet
-- Reticle style: Thin vertical line (1-2px), contrasting color (red or white with shadow)
-- Update frequency: On page load (weekly budget doesn't need real-time updates)
+### Gemini Implementation Details
+- **DOM Deep Cloning**: Since Gemini does not natively render a Weekly progress bar under the weekly limit section, the script deep-clones the hourly progress card DOM structure (including all classes, text sub-elements, and styles) to establish a parallel, visually matching Weekly limit card.
+- **Local Scraping & Logging**: Optional setting to capture and persist scraped Gemini usage stats into local storage or Chrome extension storage.
+- **Custom Refresh & Thresholds**: Adjustable range sliders to control page auto-refresh rate and over-budget coloring thresholds.
 
 ## Files
-- `usage-reticle.user.js` - Full injector source used by the browser extension content script
-- `bookmarklet.html` - Installer page with a clean embedded no-settings bookmarklet injector
-- `extension/` - Manifest V3 browser extension package
+- `usage-reticle.user.js` - Tampermonkey userscript containing the platform router, scraper, and rendering logic.
+- `extension/` - Manifest V3 browser extension package that shares the core injector script.
+- `bookmarklet.html` - Installer page for the zero-install bookmarklet.
+- `test-time-parsing.html` - Unit tests for reset time calculations.
+- `color-calibrator.html` - UI for tuning color and intensity scaling.
