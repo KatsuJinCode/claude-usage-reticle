@@ -2,7 +2,7 @@
 
 A pace tracker for AI coding-assistant usage limits. It overlays each provider's usage page with reticles that compare your actual usage against where you would be if you spread that limit evenly across the reset window.
 
-As of v3.5 it works across multiple providers: **Claude**, **Codex** (ChatGPT), **Z.ai**, **MiniMax**, and **Google Gemini**. The repo name keeps "claude" for historical reasons.
+As of v3.8 / v3.7.0 it works across multiple providers: **Claude**, **Codex** (ChatGPT), **Z.ai**, **MiniMax**, and **Google Gemini**. The repo name keeps "claude" for historical reasons.
 
 ![Claude usage tracker with reticles](demo_images/usage-tracker.png)
 
@@ -138,7 +138,11 @@ When the change is in shared code that affects both sides, do both releases in t
 
 ## Version History
 
-### Userscript v3.5 / Extension v3.4.0 (Current)
+### Userscript v3.8 / Extension v3.7.0 (Current)
+- Implemented **Cross-Provider Dynamic Spacing** to automatically add vertical margins (`margin-top: 26px !important; margin-bottom: 26px !important;`) around progress tracks for all providers except Claude (Gemini, Codex, Z.ai, MiniMax). This prevents reticle labels from obscuring reset timestamps, header text, and other sibling elements.
+- Parity alignment of layout and spacing styling between the Tampermonkey userscript and Chrome Extension content script.
+
+### Userscript v3.7 / Extension v3.6.0
 - Added full support for **Google Gemini** at `gemini.google.com/usage`.
 - Reconstructed the Gemini weekly limit card using direct deep-cloning of the hourly limit card to guarantee 100% style, typography, and Tailwind class visual parity.
 - Implemented **Local Scraping & Logging** as an opt-in toggle to log scraped usage data to local/extension storage.

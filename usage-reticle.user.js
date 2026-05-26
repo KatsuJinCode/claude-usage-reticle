@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Claude Usage Reticle
 // @namespace    https://github.com/KatsuJinCode
-// @version      3.7
+// @version      3.8
 // @description  Visual usage tracker for Claude, Codex, Z.ai, MiniMax, Gemini — see if you're OVER or UNDER budget
 // @author       KatsuJinCode, NemesisHubris, podfishapp
 // @match        https://claude.ai/*
@@ -21,8 +21,8 @@
     'use strict';
 
     var ROOT_KEY = '__claudeUsageReticle';
-    var SCRIPT_VERSION = '3.7';
-    var BUILD_ID = '3.7-20260526-gemini-custom-settings';
+    var SCRIPT_VERSION = '3.8';
+    var BUILD_ID = '3.8-20260526-layout-collision-fix';
     var STYLE_ATTR = 'data-usage-reticle-style';
     var ITEM_ATTR = 'data-usage-reticle-item';
     var CONTROL_ATTR = 'data-usage-reticle-control';
