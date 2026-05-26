@@ -1,0 +1,47 @@
+{
+  "antigravity-hooks-migration": {
+    "enabled": true,
+    "PreToolUse": [
+      {
+        "matcher": "run_command|write_to_file|replace_file_content|multi_replace_file_content|ask_question|view_file|list_directory|grep_search|read_url_content|search_web",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"/mnt/projects/win-projects/hookStable/adapters-ref/antigravity-dispatcher.mjs\" PreToolUse",
+            "timeout": 30,
+            "_source": "antigravity-hooks-migration"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "run_command|write_to_file|replace_file_content|multi_replace_file_content|ask_question|view_file|list_directory|grep_search|read_url_content|search_web",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"/mnt/projects/win-projects/hookStable/adapters-ref/antigravity-dispatcher.mjs\" PostToolUse",
+            "timeout": 30,
+            "_source": "antigravity-hooks-migration"
+          }
+        ]
+      }
+    ],
+    "PreInvocation": [
+      {
+        "type": "command",
+        "command": "node \"/mnt/projects/win-projects/hookStable/adapters-ref/antigravity-dispatcher.mjs\" PreInvocation",
+        "timeout": 30,
+        "_source": "antigravity-hooks-migration"
+      }
+    ],
+    "Stop": [
+      {
+        "type": "command",
+        "command": "node \"/mnt/projects/win-projects/hookStable/adapters-ref/antigravity-dispatcher.mjs\" Stop",
+        "timeout": 30,
+        "_source": "antigravity-hooks-migration"
+      }
+    ]
+  }
+}

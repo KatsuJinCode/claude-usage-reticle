@@ -2,8 +2,8 @@
     'use strict';
 
     var ROOT_KEY = '__claudeUsageReticle';
-    var SCRIPT_VERSION = '3.4.0';
-    var BUILD_ID = '3.4.0-20260521-prefer-on-page-refresh-and-blue-used-segment';
+    var SCRIPT_VERSION = '3.5.0';
+    var BUILD_ID = '3.5.0-20260525-google-gemini-support';
     var STYLE_ATTR = 'data-usage-reticle-style';
     var ITEM_ATTR = 'data-usage-reticle-item';
     var CONTROL_ATTR = 'data-usage-reticle-control';
@@ -143,14 +143,14 @@
     // so it falls back to a full page reload. Claude updates reactively and
     // is excluded entirely. Triggered on focus return (debounced so a quick
     // alt-tab doesn't fire) and every ~10 minutes while the tab stays focused.
-    var AUTO_RELOAD_PLATFORMS = {minimax: true, codex: true, zai: true};
+    var AUTO_RELOAD_PLATFORMS = {minimax: true, codex: true, zai: true, gemini: true};
     function setupAutoReload() {
         var platform = currentPlatform();
         if (!platform || !AUTO_RELOAD_PLATFORMS[platform.id]) return;
 
         var PAGE_LOAD_TIME = Date.now();
         var FOCUS_MIN_AGE_MS = 60 * 1000;
-        var PERIODIC_AGE_MS = 10 * 60 * 1000;
+        var PERIODIC_AGE_MS = platform.id === 'gemini' ? 30 * 60 * 1000 : 10 * 60 * 1000;
         var lastReloadAttempt = 0;
 
         function tryReload() {
@@ -447,6 +447,112 @@
                 var hrsUntil = parseInt(m[1] || 0, 10) + parseInt(m[2] || 0, 10) / 60;
                 return {reset: new Date(Date.now() + hrsUntil * 3600000), hrsUntil: hrsUntil};
             }
+        },
+        gemini: {
+            id: 'gemini',
+            supportsActiveWindow: false,
+            match: function() { return location.hostname === 'gemini.google.com'; },
+            isUsagePage: function() {
+                return location.pathname === '/usage';
+            },
+            findUsageRows: function() {
+                var rows = [];
+
+                // 1. Current/Hourly/Session Limit
+                var currentlyEl = document.querySelector('[data-test-id="gxu-currently"]') || document.querySelector('[data-testid="gxu-currently"]');
+                if (currentlyEl) {
+                    var bar = currentlyEl.querySelector('progress, div[role="progressbar"], div[class*="progressbar"]');
+                    if (!bar) {
+                        bar = currentlyEl;
+                    }
+                    var pct = parsePercentFromElement(currentlyEl);
+                    var resetBlock = findResetBlock(currentlyEl) || { resetEl: currentlyEl };
+                    var resetText = resetBlock.resetEl ? resetBlock.resetEl.textContent : '';
+                    if (!/resets?/i.test(resetText)) {
+                        // Fallback relative resets for Gemini 5-hour rolling limit
+                        var now = Date.now();
+                        var msIn5h = 5 * 3600 * 1000;
+                        var nextReset = Math.ceil(now / msIn5h) * msIn5h;
+                        var diffMs = nextReset - now;
+                        var diffHrs = Math.floor(diffMs / 3600000);
+                        var diffMins = Math.round((diffMs % 3600000) / 60000);
+                        resetText = 'Resets in ' + diffHrs + ' hr ' + diffMins + ' min';
+                    }
+
+                    rows.push({
+                        barElement: bar,
+                        label: 'currently',
+                        percentUsed: pct !== null ? pct : 0,
+                        fillDirection: 'used',
+                        resetText: resetText,
+                        windowHours: 5,
+                        isSession: true
+                    });
+                }
+
+                // 2. Weekly Limit
+                var weeklyEl = document.querySelector('[data-test-id="gxu-weekly"]') || document.querySelector('[data-testid="gxu-weekly"]');
+                if (weeklyEl) {
+                    var pct = parsePercentFromElement(weeklyEl);
+
+                    // Inject or update our weekly progress bar
+                    var bar = weeklyEl.querySelector('.gxu-weekly-bar-injected');
+                    var fill;
+                    if (!bar) {
+                        bar = document.createElement('div');
+                        bar.className = 'gxu-weekly-bar-injected gxu-bar-injected';
+                        bar.style.width = '100%';
+                        bar.style.height = '8px';
+                        bar.style.borderRadius = '4px';
+                        bar.style.marginTop = '8px';
+                        bar.style.position = 'relative';
+                        bar.style.overflow = 'visible';
+
+                        fill = document.createElement('div');
+                        fill.className = 'gxu-weekly-bar-fill gxu-bar-fill';
+                        fill.style.height = '100%';
+                        fill.style.borderRadius = '4px';
+                        fill.style.width = '0%';
+
+                        bar.appendChild(fill);
+                        weeklyEl.appendChild(bar);
+                    } else {
+                        fill = bar.querySelector('.gxu-weekly-bar-fill');
+                    }
+
+                    // Style matching current theme
+                    var theme = detectTheme();
+                    var fillBg = theme === 'dark' ? '#8ab4f8' : '#1a73e8';
+                    var trackBg = theme === 'dark' ? '#3c4043' : '#e8eaed';
+                    bar.style.background = trackBg;
+                    if (fill) {
+                        fill.style.background = fillBg;
+                        fill.style.width = (pct !== null ? pct : 0) + '%';
+                    }
+
+                    var resetBlock = findResetBlock(weeklyEl) || { resetEl: weeklyEl };
+                    var resetText = resetBlock.resetEl ? resetBlock.resetEl.textContent : '';
+                    if (!/resets?/i.test(resetText)) {
+                        // Fallback absolute reset for weekly limit
+                        resetText = 'Resets Sat 10:59 AM';
+                    }
+
+                    rows.push({
+                        barElement: bar,
+                        label: 'weekly',
+                        percentUsed: pct !== null ? pct : 0,
+                        fillDirection: 'used',
+                        resetText: resetText,
+                        windowHours: 168,
+                        isSession: false
+                    });
+                }
+
+                return rows;
+            },
+            parseReset: function(text) {
+                return parseResetInfo(text);
+            }
         }
     };
 
@@ -469,6 +575,7 @@
         style.setAttribute(STYLE_ATTR, 'true');
         style.textContent = '.usage-reticle{position:absolute;width:2px;height:100%;background:#3b82f6;box-shadow:0 0 2px rgba(0,0,0,.5);pointer-events:none;z-index:10;top:0}.usage-reticle::after{content:"";position:absolute;left:-3px;bottom:-5px;width:0;height:0;border-left:4px solid transparent;border-right:4px solid transparent;border-bottom:5px solid #3b82f6}.usage-reticle-label{position:absolute;bottom:-22px;left:50%;transform:translateX(-50%);background:#3b82f6;color:#fff;padding:1px 4px;border-radius:2px;font-size:9px;font-weight:600;white-space:nowrap}.delta-reticle{position:absolute;width:2px;height:100%;box-shadow:0 0 2px rgba(0,0,0,.5);pointer-events:none;z-index:10;top:0}.delta-reticle::before{content:"";position:absolute;left:-3px;top:-5px;width:0;height:0;border-left:4px solid transparent;border-right:4px solid transparent;border-top:5px solid var(--reticle-arrow-color,#ef4444)}.delta-reticle-label{position:absolute;top:-22px;left:50%;transform:translateX(-50%);padding:1px 4px;border-radius:2px;font-size:9px;font-weight:600;white-space:nowrap;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,0.9),0 0 4px rgba(0,0,0,0.7),0 0 8px rgba(0,0,0,0.4);border:1px solid #000}.reticle-overlay{position:absolute;height:100%;top:0;pointer-events:none;z-index:4;border-radius:9999px}.reticle-glow{position:absolute;height:100%;top:0;pointer-events:none;z-index:3;border-radius:9999px}';
         style.textContent += '.usage-reticle-settings{--reticle-panel-bg:rgba(255,250,242,.96);--reticle-panel-border:rgba(116,90,70,.28);--reticle-panel-text:#2f261f;--reticle-panel-muted:#6d5a4b;--reticle-panel-field:#fffaf2;--reticle-panel-field-border:rgba(116,90,70,.32);--reticle-panel-toggle:#7a4b2a;--reticle-panel-toggle-off:#8b8177;--reticle-panel-shadow:0 8px 22px rgba(55,38,24,.08);margin:0 0 16px;padding:12px 14px;border:1px solid var(--reticle-panel-border);border-radius:14px;background:var(--reticle-panel-bg);box-shadow:var(--reticle-panel-shadow);color:var(--reticle-panel-text);font:12px/1.35 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color-scheme:light}.usage-reticle-settings[data-reticle-theme="dark"]{--reticle-panel-bg:rgba(38,38,36,.94);--reticle-panel-border:rgba(255,255,255,.16);--reticle-panel-text:#f4f1ea;--reticle-panel-muted:#c9c1b6;--reticle-panel-field:rgba(20,20,19,.92);--reticle-panel-field-border:rgba(255,255,255,.22);--reticle-panel-toggle:#d2b48c;--reticle-panel-toggle-off:#6f6961;--reticle-panel-shadow:0 10px 28px rgba(0,0,0,.26);color-scheme:dark}.usage-reticle-settings button,.usage-reticle-settings input,.usage-reticle-settings select{font:inherit}.usage-reticle-settings__top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:nowrap}.usage-reticle-settings__heading{flex:1 1 auto;min-width:0}.usage-reticle-settings__title{font-weight:800;font-size:13px;color:var(--reticle-panel-text)}.usage-reticle-settings__summary{color:var(--reticle-panel-muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.usage-reticle-settings__grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;margin-top:10px}.usage-reticle-settings__group{display:flex;flex-direction:column;gap:5px}.usage-reticle-settings__days{display:flex;flex-wrap:wrap;gap:6px}.usage-reticle-settings label{display:flex;align-items:center;gap:5px;color:var(--reticle-panel-text)}.usage-reticle-settings input[type="time"],.usage-reticle-settings select{border:1px solid var(--reticle-panel-field-border);border-radius:6px;padding:2px 5px;background:var(--reticle-panel-field);color:var(--reticle-panel-text)}.usage-reticle-settings__toggle{flex-shrink:0;padding:4px 10px;border-radius:999px;border:1px solid var(--reticle-panel-border);background:var(--reticle-panel-toggle-off);color:#fff;font-weight:700;cursor:pointer;font-size:11px;transition:background .2s}.usage-reticle-settings__toggle[aria-pressed="true"]{background:var(--reticle-panel-toggle)}.day-boundary-reticle{position:absolute;width:2px;height:100%;background:rgba(116,90,70,.7);pointer-events:none;z-index:5;top:0}.hour-tick-reticle{position:absolute;width:1px;height:50%;bottom:0;background:rgba(116,90,70,.25);pointer-events:none;z-index:3}.day-boundary-label{position:absolute;bottom:-36px;transform:translateX(-50%);color:rgba(116,90,70,.7);font-size:9px;font-weight:700;letter-spacing:.02em;white-space:nowrap;pointer-events:none}';
+        style.textContent += '.gxu-bar-injected{width:100%;height:8px;border-radius:4px;margin-top:8px;position:relative;overflow:visible}.gxu-bar-fill{height:100%;border-radius:4px;width:0%;transition:width 0.3s ease}';
         document.head.appendChild(style);
     }
 
@@ -794,9 +901,11 @@
     function parseResetInfo(text) {
         if (!text) return null;
 
-        var relative = text.match(/(?:resets?\s*)?in\s*(?:(\d+)\s*h(?:ou)?rs?)?\s*(?:(\d+)\s*m(?:in(?:ute)?s?)?)?/i);
-        if (relative && (relative[1] || relative[2])) {
-            var hrsUntil = parseInt(relative[1] || 0, 10) + (parseInt(relative[2] || 0, 10) / 60);
+        var relative = text.match(/(?:resets?\s*)?in\s*(?:(\d+)\s*d(?:ay)?s?)?\s*(?:(\d+)\s*h(?:ou)?rs?)?\s*(?:(\d+)\s*m(?:in(?:ute)?s?)?)?/i);
+        if (relative && (relative[1] || relative[2] || relative[3])) {
+            var hrsUntil = (parseInt(relative[1] || 0, 10) * 24) +
+                           parseInt(relative[2] || 0, 10) +
+                           (parseInt(relative[3] || 0, 10) / 60);
             return {
                 hrsUntil: hrsUntil,
                 reset: new Date(Date.now() + hrsUntil * 3600000)
@@ -838,10 +947,10 @@
     function findResetBlock(bar) {
         var node = bar.parentElement;
         for (var depth = 0; depth < 10 && node; depth++) {
-            var spans = node.querySelectorAll('span');
-            for (var i = 0; i < spans.length; i++) {
-                if (/^\s*Resets/i.test(spans[i].textContent || '')) {
-                    return {block: node, resetEl: spans[i]};
+            var nodes = node.querySelectorAll('span, div, p, small, font');
+            for (var i = 0; i < nodes.length; i++) {
+                if (/resets?/i.test(nodes[i].textContent || '')) {
+                    return {block: node, resetEl: nodes[i]};
                 }
             }
             node = node.parentElement;
@@ -884,6 +993,32 @@
 
         var match = normalizeText(row.textContent).match(/(\d{1,3}(?:\.\d+)?)%\s*used/i);
         return match ? clampPct(parseFloat(match[1])) : null;
+    }
+
+    function parsePercentFromElement(el) {
+        if (!el) return null;
+        var prog = el.querySelector('progress');
+        if (prog) {
+            var val = parseFloat(prog.value);
+            var max = parseFloat(prog.max || 1);
+            if (!isNaN(val) && max > 0) return clampPct((val / max) * 100);
+        }
+        var pb = el.querySelector('[role="progressbar"]');
+        if (pb) {
+            var val = parseFloat(pb.getAttribute('aria-valuenow'));
+            var max = parseFloat(pb.getAttribute('aria-valuemax') || 100);
+            if (!isNaN(val) && max > 0) return clampPct((val / max) * 100);
+        }
+        var text = normalizeText(el.textContent);
+        var pctMatch = text.match(/(\d+(?:\.\d+)?)%/);
+        if (pctMatch) return clampPct(parseFloat(pctMatch[1]));
+        var fracMatch = text.match(/(\d+(?:\.\d+)?)\s*(?:\/|out\s+of)\s*(\d+(?:\.\d+)?)/i);
+        if (fracMatch) {
+            var val = parseFloat(fracMatch[1]);
+            var max = parseFloat(fracMatch[2]);
+            if (max > 0) return clampPct((val / max) * 100);
+        }
+        return null;
     }
 
     function createItem(className) {
@@ -1313,6 +1448,12 @@
         var raw = Math.min(Math.abs(diffPct) / 100 * 2, 1);
         var intensity = 0.35 + 0.65 * raw;
 
+        var host = bar;
+        var tagName = (bar.tagName || '').toLowerCase();
+        if (tagName === 'progress' || tagName.indexOf('progressbar') !== -1 || tagName.indexOf('progress-bar') !== -1) {
+            host = bar.parentElement;
+        }
+
         // Bar-coordinate mapping respects fillDirection: "remaining" platforms (Codex)
         // have bars that fill left-to-right with what's LEFT, so a "% used" position
         // becomes (100 - %used) on the bar.
@@ -1328,15 +1469,15 @@
             row.fillDirection || 'used'
         ].join('|');
 
-        if (bar.getAttribute(SIGNATURE_ATTR) === signature && bar.querySelector('[' + ITEM_ATTR + ']')) return true;
-        clearBar(bar);
-        bar.setAttribute(SIGNATURE_ATTR, signature);
+        if (host.getAttribute(SIGNATURE_ATTR) === signature && host.querySelector('[' + ITEM_ATTR + ']')) return true;
+        clearBar(host);
+        host.setAttribute(SIGNATURE_ATTR, signature);
 
-        if (getComputedStyle(bar).position === 'static') bar.style.position = 'relative';
+        if (getComputedStyle(host).position === 'static') host.style.position = 'relative';
         // MiniMax (and possibly others) ship overflow-hidden with !important via their
         // utility-CSS framework, which clips our absolutely-positioned children. Force
         // the override with !important so the reticles render outside the bar bounds.
-        bar.style.setProperty('overflow', 'visible', 'important');
+        host.style.setProperty('overflow', 'visible', 'important');
 
         var usageTime = metrics.dateAtPct(usagePos);
         var diffHrs = (diffPct / 100) * metrics.totalHours;
@@ -1362,7 +1503,7 @@
                 tracked.style.left = '0%';
                 tracked.style.width = trackedWidth + '%';
                 tracked.style.background = 'hsla(217, 91%, 60%, 0.75)';
-                bar.appendChild(tracked);
+                host.appendChild(tracked);
             }
         }
 
@@ -1372,19 +1513,19 @@
                 glow.style.left = overlayLeft + '%';
                 glow.style.width = overlayWidth + '%';
                 glow.style.boxShadow = '0 0 ' + (8 + intensity * 15) + 'px ' + (2 + intensity * 5) + 'px hsla(0,' + (50 + intensity * 30) + '%,' + (50 - intensity * 10) + '%,' + (0.4 + intensity * 0.4) + ')';
-                bar.appendChild(glow);
+                host.appendChild(glow);
 
                 var over = createItem('reticle-overlay');
                 over.style.left = overlayLeft + '%';
                 over.style.width = overlayWidth + '%';
                 over.style.background = 'hsla(0,' + (60 + intensity * 20) + '%,' + (40 - intensity * 10) + '%,' + (0.55 + intensity * 0.25) + ')';
-                bar.appendChild(over);
+                host.appendChild(over);
             } else if (diffPct < 0) {
                 var under = createItem('reticle-overlay');
                 under.style.left = overlayLeft + '%';
                 under.style.width = overlayWidth + '%';
                 under.style.background = 'hsla(142,' + (40 + intensity * 30) + '%,' + (50 - intensity * 10) + '%,' + (0.4 + intensity * 0.35) + ')';
-                bar.appendChild(under);
+                host.appendChild(under);
             }
         }
 
@@ -1397,7 +1538,7 @@
         deltaLabel.style.background = color;
         deltaLabel.textContent = fmtDelta(diffHrs, diffPct);
         delta.appendChild(deltaLabel);
-        bar.appendChild(delta);
+        host.appendChild(delta);
 
         var usage = createItem('usage-reticle');
         usage.style.left = usageOnBar + '%';
@@ -1405,7 +1546,7 @@
         usageLabel.className = 'usage-reticle-label';
         usageLabel.textContent = fmtTime(usageTime, !!row.isSession);
         usage.appendChild(usageLabel);
-        bar.appendChild(usage);
+        host.appendChild(usage);
 
         return true;
     }

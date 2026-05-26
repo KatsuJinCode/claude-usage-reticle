@@ -1,0 +1,11 @@
+{
+  "_source": "hookstable-rollout-v1",
+  "updatedAt": "2026-05-25T21:37:28.131Z",
+  "clis": {
+    "antigravity": {
+      "mode": "enabled",
+      "override": false,
+      "updatedAt": "2026-05-25T21:37:28.130Z"
+    }
+  }
+}
