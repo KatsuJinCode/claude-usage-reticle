@@ -110,6 +110,25 @@
     <p class="hint">Excluded nights/weekends make the NOW marker move faster during active time. Claude does not reset overnight.</p>
   </div>
 
+  <div class="group">
+    <span class="label-title">Google Gemini Settings</span>
+    <label style="margin-top: 4px;"><input id="gemini-scraping" type="checkbox"> Enable local scraping & logging</label>
+    <div style="margin-top: 8px; display: flex; flex-direction: column; gap: 4px;">
+      <div style="display: flex; justify-content: space-between;">
+        <span class="hint">Refresh interval:</span>
+        <span id="refresh-interval-val" class="hint" style="font-weight: bold;">30 mins</span>
+      </div>
+      <input id="gemini-refresh-interval" type="range" min="5" max="120" step="5" style="width: 100%; cursor: pointer;">
+    </div>
+    <div style="margin-top: 8px; display: flex; flex-direction: column; gap: 4px;">
+      <div style="display: flex; justify-content: space-between;">
+        <span class="hint">Over-budget color threshold:</span>
+        <span id="threshold-val" class="hint" style="font-weight: bold;">0%</span>
+      </div>
+      <input id="over-budget-threshold" type="range" min="0" max="50" step="5" style="width: 100%; cursor: pointer;">
+    </div>
+  </div>
+
   <div class="status"><span class="dot"></span> Settings save automatically</div>
 
   <script src="popup.js"></script>

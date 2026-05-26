@@ -9,7 +9,10 @@
         activeDays: [0, 1, 2, 3, 4, 5, 6],
         activeHoursEnabled: false,
         activeStart: '09:00',
-        activeEnd: '18:00'
+        activeEnd: '18:00',
+        geminiScrapingEnabled: false,
+        geminiRefreshInterval: 30,
+        overBudgetThreshold: 0
     };
     var api = typeof browser !== 'undefined' ? browser : chrome;
     var state = {
@@ -24,7 +27,12 @@
         days: document.getElementById('days'),
         hoursEnabled: document.getElementById('hours-enabled'),
         start: document.getElementById('start'),
-        end: document.getElementById('end')
+        end: document.getElementById('end'),
+        geminiScraping: document.getElementById('gemini-scraping'),
+        geminiRefreshInterval: document.getElementById('gemini-refresh-interval'),
+        refreshIntervalVal: document.getElementById('refresh-interval-val'),
+        overBudgetThreshold: document.getElementById('over-budget-threshold'),
+        thresholdVal: document.getElementById('threshold-val')
     };
 
     WEEK_ORDER.forEach(function(jsDay) {
@@ -45,7 +53,10 @@
             activeDays: Array.isArray(settings.activeDays) && settings.activeDays.length ? settings.activeDays.slice() : DEFAULT_SETTINGS.activeDays.slice(),
             activeHoursEnabled: !!settings.activeHoursEnabled,
             activeStart: /^\d{2}:\d{2}$/.test(settings.activeStart || '') ? settings.activeStart : DEFAULT_SETTINGS.activeStart,
-            activeEnd: /^\d{2}:\d{2}$/.test(settings.activeEnd || '') ? settings.activeEnd : DEFAULT_SETTINGS.activeEnd
+            activeEnd: /^\d{2}:\d{2}$/.test(settings.activeEnd || '') ? settings.activeEnd : DEFAULT_SETTINGS.activeEnd,
+            geminiScrapingEnabled: settings.geminiScrapingEnabled === undefined ? DEFAULT_SETTINGS.geminiScrapingEnabled : !!settings.geminiScrapingEnabled,
+            geminiRefreshInterval: typeof settings.geminiRefreshInterval === 'number' ? settings.geminiRefreshInterval : DEFAULT_SETTINGS.geminiRefreshInterval,
+            overBudgetThreshold: typeof settings.overBudgetThreshold === 'number' ? settings.overBudgetThreshold : DEFAULT_SETTINGS.overBudgetThreshold
         };
     }
 
@@ -98,6 +109,12 @@
         els.days.querySelectorAll('[data-day]').forEach(function(input) {
             input.checked = state.settings.activeDays.indexOf(parseInt(input.value, 10)) !== -1;
         });
+
+        if (els.geminiScraping) els.geminiScraping.checked = !!state.settings.geminiScrapingEnabled;
+        if (els.geminiRefreshInterval) els.geminiRefreshInterval.value = state.settings.geminiRefreshInterval || 30;
+        if (els.refreshIntervalVal) els.refreshIntervalVal.textContent = (state.settings.geminiRefreshInterval || 30) + ' mins';
+        if (els.overBudgetThreshold) els.overBudgetThreshold.value = state.settings.overBudgetThreshold || 0;
+        if (els.thresholdVal) els.thresholdVal.textContent = (state.settings.overBudgetThreshold || 0) + '%';
     }
 
     function update(mutator) {
@@ -144,5 +161,33 @@
                 });
             });
         });
+
+        if (els.geminiScraping) {
+            els.geminiScraping.addEventListener('change', function(event) {
+                update(function() { state.settings.geminiScrapingEnabled = event.target.checked; });
+            });
+        }
+        if (els.geminiRefreshInterval) {
+            els.geminiRefreshInterval.addEventListener('input', function(event) {
+                var val = parseInt(event.target.value, 10) || 30;
+                if (els.refreshIntervalVal) els.refreshIntervalVal.textContent = val + ' mins';
+            });
+            els.geminiRefreshInterval.addEventListener('change', function(event) {
+                update(function() {
+                    state.settings.geminiRefreshInterval = parseInt(event.target.value, 10) || 30;
+                });
+            });
+        }
+        if (els.overBudgetThreshold) {
+            els.overBudgetThreshold.addEventListener('input', function(event) {
+                var val = parseInt(event.target.value, 10) || 0;
+                if (els.thresholdVal) els.thresholdVal.textContent = val + '%';
+            });
+            els.overBudgetThreshold.addEventListener('change', function(event) {
+                update(function() {
+                    state.settings.overBudgetThreshold = parseInt(event.target.value, 10) || 0;
+                });
+            });
+        }
     }
 })();

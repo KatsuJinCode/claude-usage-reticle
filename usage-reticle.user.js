@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Claude Usage Reticle
 // @namespace    https://github.com/KatsuJinCode
-// @version      3.6
+// @version      3.7
 // @description  Visual usage tracker for Claude, Codex, Z.ai, MiniMax, Gemini — see if you're OVER or UNDER budget
 // @author       KatsuJinCode, NemesisHubris, podfishapp
 // @match        https://claude.ai/*
@@ -21,8 +21,8 @@
     'use strict';
 
     var ROOT_KEY = '__claudeUsageReticle';
-    var SCRIPT_VERSION = '3.6';
-    var BUILD_ID = '3.6-20260525-google-gemini-support';
+    var SCRIPT_VERSION = '3.7';
+    var BUILD_ID = '3.7-20260526-gemini-custom-settings';
     var STYLE_ATTR = 'data-usage-reticle-style';
     var ITEM_ATTR = 'data-usage-reticle-item';
     var CONTROL_ATTR = 'data-usage-reticle-control';
@@ -44,7 +44,10 @@
         activeDays: [0, 1, 2, 3, 4, 5, 6],
         activeHoursEnabled: false,
         activeStart: '09:00',
-        activeEnd: '18:00'
+        activeEnd: '18:00',
+        geminiScrapingEnabled: false,
+        geminiRefreshInterval: 30,
+        overBudgetThreshold: 0
     };
 
     var existing = window[ROOT_KEY];
@@ -169,7 +172,7 @@
 
         var PAGE_LOAD_TIME = Date.now();
         var FOCUS_MIN_AGE_MS = 60 * 1000;
-        var PERIODIC_AGE_MS = platform.id === 'gemini' ? 30 * 60 * 1000 : 10 * 60 * 1000;
+        var PERIODIC_AGE_MS = platform.id === 'gemini' ? (state.settings.geminiRefreshInterval || 30) * 60 * 1000 : 10 * 60 * 1000;
         var lastReloadAttempt = 0;
 
         function tryReload() {
@@ -526,10 +529,6 @@
                 // 2. Weekly Limit
                 var weeklyEl = document.querySelector('[data-test-id="gxu-weekly"]') || document.querySelector('[data-testid="gxu-weekly"]');
                 if (weeklyEl && currentlyEl) {
-                    weeklyEl.style.setProperty('display', 'flex', 'important');
-                    weeklyEl.style.setProperty('flex-direction', 'column', 'important');
-                    weeklyEl.style.setProperty('align-items', 'stretch', 'important');
-
                     var nativeWrapper = weeklyEl.querySelector('.gxu-weekly-native-hidden');
                     if (!nativeWrapper) {
                         nativeWrapper = document.createElement('div');
@@ -541,29 +540,46 @@
                         weeklyEl.appendChild(nativeWrapper);
                     }
 
-                    var pct = parsePercentFromElement(nativeWrapper);
+                    var pctWeekly = parsePercentFromElement(nativeWrapper);
                     var resetBlock = findResetBlock(nativeWrapper) || { resetEl: nativeWrapper };
-                    var resetText = resetBlock.resetEl ? resetBlock.resetEl.textContent : '';
-                    if (!/resets?/i.test(resetText)) {
+                    var resetTextWeekly = resetBlock.resetEl ? resetBlock.resetEl.textContent : '';
+                    if (!/resets?/i.test(resetTextWeekly)) {
                         // Fallback absolute reset for weekly limit
-                        resetText = 'Resets Sat 10:59 AM';
+                        resetTextWeekly = 'Resets Sat 10:59 AM';
                     }
+
+                    // Extract and sanitize reset text to avoid duplicate percentage or junk text
+                    var m = resetTextWeekly.match(/resets?.*$/i);
+                    if (m) {
+                        resetTextWeekly = m[0];
+                    }
+                    resetTextWeekly = resetTextWeekly.replace(/\d+%\s*used/gi, '').replace(/\s+/g, ' ').trim();
+
+                    // Apply same classes and styles to weeklyEl wrapper itself to match currentlyEl container and prevent double margins/padding
+                    weeklyEl.className = currentlyEl.className;
+                    weeklyEl.style.cssText = currentlyEl.style.cssText;
+                    weeklyEl.style.setProperty('display', 'flex', 'important');
+                    weeklyEl.style.setProperty('flex-direction', 'column', 'important');
+                    weeklyEl.style.setProperty('align-items', 'stretch', 'important');
 
                     var card = weeklyEl.querySelector('.gxu-weekly-card-injected');
                     var percentText, resetTextEl, bar, fill;
                     if (!card) {
-                        card = currentlyEl.cloneNode(true);
-                        
-                        // Clear IDs and test IDs from the clone to prevent duplicate selector matches
-                        card.removeAttribute('id');
-                        card.removeAttribute('data-testid');
-                        card.removeAttribute('data-test-id');
-                        card.className = 'gxu-weekly-card-injected ' + currentlyEl.className;
-                        
-                        // Enforce block/full-width styling
+                        card = document.createElement('div');
+                        card.className = 'gxu-weekly-card-injected';
                         card.style.width = '100%';
-                        card.style.display = 'flex';
-                        card.style.flexDirection = 'column';
+                        card.style.display = 'contents'; // Use 'contents' display to avoid double margin/padding
+
+                        // Clone each child of currentlyEl and append to card
+                        for (var i = 0; i < currentlyEl.childNodes.length; i++) {
+                            var child = currentlyEl.childNodes[i];
+                            if (child.nodeType === Node.ELEMENT_NODE) {
+                                // Skip injected items (like reticles, arrows, badges)
+                                if (child.getAttribute(ITEM_ATTR) === 'true') continue;
+                                if (child.classList.contains('usage-reticle') || child.classList.contains('delta-reticle')) continue;
+                            }
+                            card.appendChild(child.cloneNode(true));
+                        }
 
                         // Query cloned elements using the tagged helper classes
                         var title = card.querySelector('.gxu-title-element');
@@ -598,21 +614,31 @@
                     }
 
                     if (percentText) {
-                        percentText.textContent = (pct !== null ? pct : 0) + '% used';
+                        percentText.textContent = (pctWeekly !== null ? pctWeekly : 0) + '% used';
                     }
                     if (fill) {
-                        fill.style.width = (pct !== null ? pct : 0) + '%';
+                        fill.style.width = (pctWeekly !== null ? pctWeekly : 0) + '%';
                     }
                     if (resetTextEl) {
-                        resetTextEl.textContent = resetText;
+                        resetTextEl.textContent = resetTextWeekly;
+                    }
+
+                    if (state.settings.geminiScrapingEnabled) {
+                        saveScrapedData({
+                            currentlyPercent: pct !== null ? pct : 0,
+                            weeklyPercent: pctWeekly !== null ? pctWeekly : 0,
+                            currentlyReset: resetText || '',
+                            weeklyReset: resetTextWeekly || '',
+                            timestamp: Date.now()
+                        });
                     }
 
                     rows.push({
                         barElement: bar,
                         label: 'weekly',
-                        percentUsed: pct !== null ? pct : 0,
+                        percentUsed: pctWeekly !== null ? pctWeekly : 0,
                         fillDirection: 'used',
-                        resetText: resetText,
+                        resetText: resetTextWeekly,
                         windowHours: 168,
                         isSession: false
                     });
@@ -672,6 +698,18 @@
         }
     }
 
+    function saveScrapedData(data) {
+        var api = extensionApi();
+        if (api && api.storage && api.storage.local) {
+            try {
+                api.storage.local.set({ 'geminiUsageScrapedData': data });
+            } catch (err) {}
+        }
+        try {
+            localStorage.setItem('geminiUsageScrapedData', JSON.stringify(data));
+        } catch (err) {}
+    }
+
     function normalizeKey(text) {
         return normalizeText(text).toLowerCase();
     }
@@ -711,10 +749,16 @@
     }
 
     function getColor(pct) {
+        var threshold = state.settings.overBudgetThreshold || 0;
         var raw = Math.min(Math.abs(pct) / 100 * 2, 1);
         var p = 0.35 + 0.65 * raw;
-        if (pct < 0) return 'hsl(142,' + (5 + p * 70) + '%,' + (95 - p * 55) + '%)';
-        return 'hsl(0,' + (5 + p * 75) + '%,' + (95 - p * 55) + '%)';
+        if (pct <= 0) {
+            return 'hsl(142,' + (5 + p * 70) + '%,' + (95 - p * 55) + '%)';
+        } else if (pct <= threshold) {
+            return 'hsl(38,' + (5 + p * 85) + '%,' + (95 - p * 50) + '%)';
+        } else {
+            return 'hsl(0,' + (5 + p * 75) + '%,' + (95 - p * 55) + '%)';
+        }
     }
 
     function parseRgb(value) {
@@ -795,6 +839,9 @@
             if (typeof saved.activeHoursEnabled === 'boolean') settings.activeHoursEnabled = saved.activeHoursEnabled;
             if (/^\d{2}:\d{2}$/.test(saved.activeStart || '')) settings.activeStart = saved.activeStart;
             if (/^\d{2}:\d{2}$/.test(saved.activeEnd || '')) settings.activeEnd = saved.activeEnd;
+            if (typeof saved.geminiScrapingEnabled === 'boolean') settings.geminiScrapingEnabled = saved.geminiScrapingEnabled;
+            if (typeof saved.geminiRefreshInterval === 'number') settings.geminiRefreshInterval = saved.geminiRefreshInterval;
+            if (typeof saved.overBudgetThreshold === 'number') settings.overBudgetThreshold = saved.overBudgetThreshold;
         } catch (err) {}
         if (!settings.activeDays.length) settings.activeDays = DEFAULT_SETTINGS.activeDays.slice();
         return settings;
@@ -879,7 +926,10 @@
             activeDays: settings.activeDays.slice(),
             activeHoursEnabled: !!settings.activeHoursEnabled,
             activeStart: settings.activeStart,
-            activeEnd: settings.activeEnd
+            activeEnd: settings.activeEnd,
+            geminiScrapingEnabled: settings.geminiScrapingEnabled === undefined ? DEFAULT_SETTINGS.geminiScrapingEnabled : !!settings.geminiScrapingEnabled,
+            geminiRefreshInterval: typeof settings.geminiRefreshInterval === 'number' ? settings.geminiRefreshInterval : DEFAULT_SETTINGS.geminiRefreshInterval,
+            overBudgetThreshold: typeof settings.overBudgetThreshold === 'number' ? settings.overBudgetThreshold : DEFAULT_SETTINGS.overBudgetThreshold
         };
     }
 
@@ -1388,6 +1438,9 @@
     }
 
     function findControlsAnchor() {
+        if (location.hostname === 'gemini.google.com') {
+            return document.querySelector('[data-test-id="gxu-weekly"]') || document.querySelector('[data-testid="gxu-weekly"]');
+        }
         var sections = Array.prototype.slice.call(document.querySelectorAll('section'));
         var fallback = sections[sections.length - 1] || null;
         for (var i = 0; i < sections.length; i++) {
@@ -1410,6 +1463,12 @@
         var start = panel.querySelector('[data-reticle-start]');
         var end = panel.querySelector('[data-reticle-end]');
 
+        var geminiScraping = panel.querySelector('[data-reticle-gemini-scraping]');
+        var geminiRefreshInterval = panel.querySelector('[data-reticle-gemini-refresh-interval]');
+        var refreshIntervalVal = panel.querySelector('[data-reticle-refresh-interval-val]');
+        var overBudgetThreshold = panel.querySelector('[data-reticle-over-budget-threshold]');
+        var thresholdVal = panel.querySelector('[data-reticle-threshold-val]');
+
         panel.setAttribute('data-reticle-theme', detectTheme());
         toggle.setAttribute('aria-pressed', String(settings.activeWindowEnabled));
         toggle.textContent = settings.activeWindowEnabled ? 'Custom window on' : 'Custom window off';
@@ -1420,6 +1479,12 @@
         panel.querySelectorAll('[data-reticle-day]').forEach(function(input) {
             input.checked = settings.activeDays.indexOf(parseInt(input.value, 10)) !== -1;
         });
+
+        if (geminiScraping) geminiScraping.checked = !!settings.geminiScrapingEnabled;
+        if (geminiRefreshInterval) geminiRefreshInterval.value = settings.geminiRefreshInterval || 30;
+        if (refreshIntervalVal) refreshIntervalVal.textContent = (settings.geminiRefreshInterval || 30) + ' mins';
+        if (overBudgetThreshold) overBudgetThreshold.value = settings.overBudgetThreshold || 0;
+        if (thresholdVal) thresholdVal.textContent = (settings.overBudgetThreshold || 0) + '%';
     }
 
     function renderControls(anchor) {
@@ -1438,7 +1503,23 @@
         var panel = document.createElement('div');
         panel.className = 'usage-reticle-settings';
         panel.setAttribute(CONTROL_ATTR, 'true');
-        panel.innerHTML = '<div class="usage-reticle-settings__top"><div class="usage-reticle-settings__heading"><div class="usage-reticle-settings__title">Usage Reticle Budget Window</div><div class="usage-reticle-settings__summary" data-reticle-summary></div></div><button type="button" class="usage-reticle-settings__toggle" data-reticle-toggle></button></div><div class="usage-reticle-settings__grid"><div class="usage-reticle-settings__group"><span>Active days</span><div class="usage-reticle-settings__days" data-reticle-days></div></div><div class="usage-reticle-settings__group"><label><input type="checkbox" data-reticle-hours-enabled> Limit active hours</label><div class="usage-reticle-settings__time"><input type="time" data-reticle-start> <span>to</span> <input type="time" data-reticle-end></div></div></div>';
+        panel.innerHTML = '<div class="usage-reticle-settings__top"><div class="usage-reticle-settings__heading"><div class="usage-reticle-settings__title">Usage Reticle Budget Window</div><div class="usage-reticle-settings__summary" data-reticle-summary></div></div><button type="button" class="usage-reticle-settings__toggle" data-reticle-toggle></button></div>' +
+            '<div class="usage-reticle-settings__grid">' +
+                '<div class="usage-reticle-settings__group"><span>Active days</span><div class="usage-reticle-settings__days" data-reticle-days></div></div>' +
+                '<div class="usage-reticle-settings__group"><label><input type="checkbox" data-reticle-hours-enabled> Limit active hours</label><div class="usage-reticle-settings__time"><input type="time" data-reticle-start> <span>to</span> <input type="time" data-reticle-end></div></div>' +
+            '</div>' +
+            '<div class="usage-reticle-settings__gemini" style="margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(128,128,128,0.2); display: flex; flex-direction: column; gap: 8px;">' +
+                '<div class="usage-reticle-settings__title" style="font-weight: bold; font-size: 12px;">Google Gemini Settings</div>' +
+                '<label style="display: flex; align-items: center; gap: 6px;"><input type="checkbox" data-reticle-gemini-scraping> Enable local scraping & logging</label>' +
+                '<div style="display: flex; flex-direction: column; gap: 2px;">' +
+                    '<div style="display: flex; justify-content: space-between; font-size: 11px;"><span>Refresh Interval:</span><span data-reticle-refresh-interval-val>30 mins</span></div>' +
+                    '<input type="range" min="5" max="120" step="5" data-reticle-gemini-refresh-interval style="width: 100%; cursor: pointer;">' +
+                '</div>' +
+                '<div style="display: flex; flex-direction: column; gap: 2px;">' +
+                    '<div style="display: flex; justify-content: space-between; font-size: 11px;"><span>Over-budget Color Threshold:</span><span data-reticle-threshold-val>0%</span></div>' +
+                    '<input type="range" min="0" max="50" step="5" data-reticle-over-budget-threshold style="width: 100%; cursor: pointer;">' +
+                '</div>' +
+            '</div>';
 
         var days = panel.querySelector('[data-reticle-days]');
         var WEEK_ORDER = [1, 2, 3, 4, 5, 6, 0];
@@ -1489,6 +1570,45 @@
                 scheduleRefresh(0);
             });
         });
+
+        var geminiScraping = panel.querySelector('[data-reticle-gemini-scraping]');
+        var geminiRefreshInterval = panel.querySelector('[data-reticle-gemini-refresh-interval]');
+        var refreshIntervalVal = panel.querySelector('[data-reticle-refresh-interval-val]');
+        var overBudgetThreshold = panel.querySelector('[data-reticle-over-budget-threshold]');
+        var thresholdVal = panel.querySelector('[data-reticle-threshold-val]');
+
+        if (geminiScraping) {
+            geminiScraping.addEventListener('change', function(event) {
+                state.settings.geminiScrapingEnabled = event.target.checked;
+                saveSettings();
+                updateControls();
+                scheduleRefresh(0);
+            });
+        }
+        if (geminiRefreshInterval) {
+            geminiRefreshInterval.addEventListener('input', function(event) {
+                var val = parseInt(event.target.value, 10) || 30;
+                if (refreshIntervalVal) refreshIntervalVal.textContent = val + ' mins';
+            });
+            geminiRefreshInterval.addEventListener('change', function(event) {
+                state.settings.geminiRefreshInterval = parseInt(event.target.value, 10) || 30;
+                saveSettings();
+                updateControls();
+                scheduleRefresh(0);
+            });
+        }
+        if (overBudgetThreshold) {
+            overBudgetThreshold.addEventListener('input', function(event) {
+                var val = parseInt(event.target.value, 10) || 0;
+                if (thresholdVal) thresholdVal.textContent = val + '%';
+            });
+            overBudgetThreshold.addEventListener('change', function(event) {
+                state.settings.overBudgetThreshold = parseInt(event.target.value, 10) || 0;
+                saveSettings();
+                updateControls();
+                scheduleRefresh(0);
+            });
+        }
 
         if (anchor.nextSibling) {
             anchor.parentElement.insertBefore(panel, anchor.nextSibling);

@@ -2,7 +2,7 @@
 
 A pace tracker for AI coding-assistant usage limits. It overlays each provider's usage page with reticles that compare your actual usage against where you would be if you spread that limit evenly across the reset window.
 
-As of v3.0 it works across multiple providers: **Claude**, **Codex** (ChatGPT), **Z.ai**, and **MiniMax**. The repo name keeps "claude" for historical reasons.
+As of v3.5 it works across multiple providers: **Claude**, **Codex** (ChatGPT), **Z.ai**, **MiniMax**, and **Google Gemini**. The repo name keeps "claude" for historical reasons.
 
 ![Claude usage tracker with reticles](demo_images/usage-tracker.png)
 
@@ -31,6 +31,7 @@ If your label shows `1d 5h OVER (15%)`, it means your usage is 15 percentage poi
 | Codex | `chatgpt.com/codex/cloud/settings/analytics` | Reticles on 5h + Weekly usage limit cards (incl. GPT-5.3-Codex-Spark). |
 | Z.ai | `z.ai/manage-apikey/subscription` (click Usage tab) | Reticles on Weekly + Monthly quotas. 5 Hours Quota row not reticled — Z.ai does not expose a reset timestamp for the rolling 5h window. |
 | MiniMax | `platform.minimax.io/user-center/payment/token-plan` | Reticles on each Current Usage row (Text Gen, Audio, Video, Music, etc.). Newer plans add a weekly-limit row whose DOM hasn't been verified — open an issue if you have one and the reticle is missing. |
+| Google Gemini | `gemini.google.com/usage` | Reticles on Current (Hourly) + Weekly bars. Visual cloning matches both cards perfectly. Local scraping toggle, custom refresh rates, and thresholds available. |
 
 ### Want another provider?
 
@@ -137,7 +138,14 @@ When the change is in shared code that affects both sides, do both releases in t
 
 ## Version History
 
-### Userscript v3.4 / Extension v3.3.0 (Current)
+### Userscript v3.5 / Extension v3.4.0 (Current)
+- Added full support for **Google Gemini** at `gemini.google.com/usage`.
+- Reconstructed the Gemini weekly limit card using direct deep-cloning of the hourly limit card to guarantee 100% style, typography, and Tailwind class visual parity.
+- Implemented **Local Scraping & Logging** as an opt-in toggle to log scraped usage data to local/extension storage.
+- Added customizable **Refresh Interval** (5 to 120 minutes slider) and **Over-Budget Color Threshold** settings to change colors dynamically based on budget deviation.
+- Cleaned up reset-timestamp parsing to prevent overlapping/concatenated percentage text.
+
+### Userscript v3.4 / Extension v3.3.0
 - Fixed a latent init-order bug that had been there since v3.0. The boot section called `init()` at the top of the IIFE, but the `platforms` object literal isn't assigned until 150 lines further down. Because `var` declarations hoist names without values, the first `currentPlatform()` lookup saw `platforms === undefined`, silently returned null, `isUsagePage()` returned false, and the script bailed without drawing anything. Sometimes a later DOM mutation would re-trigger the render and "heal" it; sometimes the page sat empty. Moved the `init()` call to the bottom of the IIFE so every declaration has run before init touches them
 - Extended the auto-reload to Z.ai as well — Z.ai also requires manual refresh to update usage. Auto-reload is now active on MiniMax, Codex, and Z.ai. Only Claude is excluded (its bars update reactively)
 
