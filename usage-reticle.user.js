@@ -492,6 +492,11 @@
                     var bar = currentlyTrack || currentlyEl.querySelector('progress, [role="progressbar"], [class*="progressbar"]');
                     if (!bar) {
                         bar = currentlyEl;
+                    } else {
+                        bar.style.setProperty('position', 'relative', 'important');
+                        bar.style.setProperty('overflow', 'visible', 'important');
+                        bar.style.setProperty('margin-top', '26px', 'important');
+                        bar.style.setProperty('margin-bottom', '26px', 'important');
                     }
                     var pct = parsePercentFromElement(currentlyEl);
                     var resetBlock = findResetBlock(bar) || { resetEl: currentlyEl };
@@ -593,7 +598,8 @@
                         if (bar) {
                             bar.style.position = 'relative';
                             bar.style.overflow = 'visible';
-                            bar.style.marginTop = '8px';
+                            bar.style.marginTop = '26px';
+                            bar.style.marginBottom = '26px';
                             // Ensure any cloned reticles inside are cleaned up
                             bar.querySelectorAll(RETICLE_SELECTOR).forEach(function(el) {
                                 el.remove();
@@ -621,6 +627,12 @@
                     }
                     if (resetTextEl) {
                         resetTextEl.textContent = resetTextWeekly;
+                    }
+                    if (bar && bar !== weeklyEl) {
+                        bar.style.setProperty('position', 'relative', 'important');
+                        bar.style.setProperty('overflow', 'visible', 'important');
+                        bar.style.setProperty('margin-top', '26px', 'important');
+                        bar.style.setProperty('margin-bottom', '26px', 'important');
                     }
 
                     if (state.settings.geminiScrapingEnabled) {
@@ -1697,12 +1709,12 @@
             if (!row || !row.barElement) return;
             var resetInfo = (typeof platform.parseReset === 'function') ? platform.parseReset(row.resetText || '') : null;
             if (!resetInfo) return;
-            if (renderGenericBar(row, resetInfo)) added++;
+            if (renderGenericBar(row, resetInfo, platform.id)) added++;
         });
         return added;
     }
 
-    function renderGenericBar(row, resetInfo) {
+    function renderGenericBar(row, resetInfo, platformId) {
         var bar = row.barElement;
         var usagePos = clampPct(row.percentUsed);
         var metrics = getBudgetMetrics(row.windowHours, resetInfo, false);
@@ -1742,6 +1754,11 @@
         // utility-CSS framework, which clips our absolutely-positioned children. Force
         // the override with !important so the reticles render outside the bar bounds.
         host.style.setProperty('overflow', 'visible', 'important');
+
+        if (platformId && platformId !== 'claude') {
+            host.style.setProperty('margin-top', '26px', 'important');
+            host.style.setProperty('margin-bottom', '26px', 'important');
+        }
 
         var usageTime = metrics.dateAtPct(usagePos);
         var diffHrs = (diffPct / 100) * metrics.totalHours;
