@@ -479,22 +479,12 @@
 
                 // 1. Current/Hourly/Session Limit
                 var currentlyEl = document.querySelector('[data-test-id="gxu-currently"]') || document.querySelector('[data-testid="gxu-currently"]');
-                var currentlyTrack = null;
-                var currentlyIndicator = null;
-                var currentlyHeader = null;
-                var currentlyTitleWrapper = null;
-                var currentlyTitle = null;
-                var currentlyPercentText = null;
-                var currentlyResetText = null;
 
                 if (currentlyEl) {
-                    currentlyTrack = currentlyEl.querySelector('.progress-track');
-                    currentlyIndicator = currentlyEl.querySelector('.progress-indicator');
-                    currentlyHeader = currentlyEl.querySelector('.gxu-item-header');
-                    currentlyTitleWrapper = currentlyEl.querySelector('.current-usage');
-                    currentlyTitle = currentlyEl.querySelector('.current-usage p');
-                    currentlyPercentText = currentlyEl.querySelector('.gxu-item-header > p');
-                    currentlyResetText = currentlyEl.querySelector('.reset-time-luminous');
+                    var currentlyTrack = currentlyEl.querySelector('.progress-track');
+                    var currentlyIndicator = currentlyEl.querySelector('.progress-indicator');
+                    var currentlyTitle = currentlyEl.querySelector('.current-usage p') || currentlyEl.querySelector('p');
+                    var currentlyPercentText = currentlyEl.querySelector('.gxu-item-header > p') || currentlyEl.querySelector('p:nth-of-type(2)');
 
                     var bar = currentlyTrack || currentlyEl.querySelector('progress, [role="progressbar"], [class*="progressbar"]');
                     if (!bar) {
@@ -513,6 +503,14 @@
                         var diffMins = Math.round((diffMs % 3600000) / 60000);
                         resetText = 'Resets in ' + diffHrs + ' hr ' + diffMins + ' min';
                     }
+                    var currentlyResetText = resetBlock.resetEl;
+
+                    // Tag elements with custom helper classes so they can be easily queried in the clone
+                    if (currentlyTitle) currentlyTitle.classList.add('gxu-title-element');
+                    if (currentlyPercentText) currentlyPercentText.classList.add('gxu-percent-element');
+                    if (currentlyTrack) currentlyTrack.classList.add('gxu-track-element');
+                    if (currentlyIndicator) currentlyIndicator.classList.add('gxu-indicator-element');
+                    if (currentlyResetText) currentlyResetText.classList.add('gxu-reset-text-element');
 
                     rows.push({
                         barElement: bar,
@@ -527,8 +525,10 @@
 
                 // 2. Weekly Limit
                 var weeklyEl = document.querySelector('[data-test-id="gxu-weekly"]') || document.querySelector('[data-testid="gxu-weekly"]');
-                if (weeklyEl) {
+                if (weeklyEl && currentlyEl) {
+                    weeklyEl.style.setProperty('display', 'flex', 'important');
                     weeklyEl.style.setProperty('flex-direction', 'column', 'important');
+                    weeklyEl.style.setProperty('align-items', 'stretch', 'important');
 
                     var nativeWrapper = weeklyEl.querySelector('.gxu-weekly-native-hidden');
                     if (!nativeWrapper) {
@@ -552,65 +552,49 @@
                     var card = weeklyEl.querySelector('.gxu-weekly-card-injected');
                     var percentText, resetTextEl, bar, fill;
                     if (!card) {
-                        card = document.createElement('div');
-                        card.className = 'gxu-weekly-card-injected';
+                        card = currentlyEl.cloneNode(true);
+                        
+                        // Clear IDs and test IDs from the clone to prevent duplicate selector matches
+                        card.removeAttribute('id');
+                        card.removeAttribute('data-testid');
+                        card.removeAttribute('data-test-id');
+                        card.className = 'gxu-weekly-card-injected ' + currentlyEl.className;
+                        
+                        // Enforce block/full-width styling
                         card.style.width = '100%';
                         card.style.display = 'flex';
                         card.style.flexDirection = 'column';
-                        copyScopeAttributes(weeklyEl, card);
 
-                        // Header
-                        var header = document.createElement('div');
-                        header.className = 'gxu-item-header';
-                        copyScopeAttributes(currentlyHeader, header);
+                        // Query cloned elements using the tagged helper classes
+                        var title = card.querySelector('.gxu-title-element');
+                        percentText = card.querySelector('.gxu-percent-element');
+                        bar = card.querySelector('.gxu-track-element');
+                        fill = card.querySelector('.gxu-indicator-element');
+                        resetTextEl = card.querySelector('.gxu-reset-text-element');
 
-                        var titleWrapper = document.createElement('div');
-                        titleWrapper.className = 'current-usage';
-                        copyScopeAttributes(currentlyTitleWrapper, titleWrapper);
+                        if (title) title.textContent = 'Weekly limit';
+                        
+                        if (bar) {
+                            bar.style.position = 'relative';
+                            bar.style.overflow = 'visible';
+                            bar.style.marginTop = '8px';
+                            // Ensure any cloned reticles inside are cleaned up
+                            bar.querySelectorAll(RETICLE_SELECTOR).forEach(function(el) {
+                                el.remove();
+                            });
+                        }
 
-                        var title = document.createElement('p');
-                        title.className = 'gds-emphasized-body-l';
-                        title.textContent = 'Weekly limit';
-                        copyScopeAttributes(currentlyTitle, title);
-
-                        titleWrapper.appendChild(title);
-                        header.appendChild(titleWrapper);
-
-                        percentText = document.createElement('p');
-                        percentText.className = 'gds-emphasized-body-l gxu-weekly-percent-text';
-                        copyScopeAttributes(currentlyPercentText, percentText);
-                        header.appendChild(percentText);
-
-                        card.appendChild(header);
-
-                        // Progress track
-                        bar = document.createElement('div');
-                        bar.className = 'gxu-weekly-bar-injected progress-track progress-track-luminous';
-                        bar.style.position = 'relative';
-                        bar.style.overflow = 'visible';
-                        bar.style.marginTop = '8px';
-                        copyScopeAttributes(currentlyTrack, bar);
-
-                        fill = document.createElement('div');
-                        fill.className = 'gxu-weekly-bar-fill progress-indicator progress-indicator-luminous';
-                        fill.style.width = '0%';
-                        copyScopeAttributes(currentlyIndicator, fill);
-
-                        bar.appendChild(fill);
-                        card.appendChild(bar);
-
-                        // Reset time
-                        resetTextEl = document.createElement('p');
-                        resetTextEl.className = 'gds-emphasized-body-m reset-time-luminous gxu-weekly-reset-text';
-                        copyScopeAttributes(currentlyResetText, resetTextEl);
-                        card.appendChild(resetTextEl);
+                        // Remove all other reticles from the card just in case
+                        card.querySelectorAll(RETICLE_SELECTOR).forEach(function(el) {
+                            el.remove();
+                        });
 
                         weeklyEl.appendChild(card);
                     } else {
-                        percentText = card.querySelector('.gxu-weekly-percent-text');
-                        bar = card.querySelector('.gxu-weekly-bar-injected');
-                        fill = card.querySelector('.gxu-weekly-bar-fill');
-                        resetTextEl = card.querySelector('.gxu-weekly-reset-text');
+                        percentText = card.querySelector('.gxu-percent-element');
+                        bar = card.querySelector('.gxu-track-element');
+                        fill = card.querySelector('.gxu-indicator-element');
+                        resetTextEl = card.querySelector('.gxu-reset-text-element');
                     }
 
                     if (percentText) {
