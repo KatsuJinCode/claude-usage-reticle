@@ -485,7 +485,7 @@
                         bar = currentlyEl;
                     }
                     var pct = parsePercentFromElement(currentlyEl);
-                    var resetBlock = findResetBlock(currentlyEl) || { resetEl: currentlyEl };
+                    var resetBlock = findResetBlock(bar) || { resetEl: currentlyEl };
                     var resetText = resetBlock.resetEl ? resetBlock.resetEl.textContent : '';
                     if (!/resets?/i.test(resetText)) {
                         // Fallback relative resets for Gemini 5-hour rolling limit
@@ -534,11 +534,19 @@
                         fill = bar.querySelector('.gxu-weekly-bar-fill');
                     }
 
+                    // Copy Angular scoping attributes from currently card's progress bar to weekly card's progress bar
+                    if (currentlyEl) {
+                        var currentlyTrack = currentlyEl.querySelector('.progress-track');
+                        var currentlyIndicator = currentlyEl.querySelector('.progress-indicator');
+                        if (currentlyTrack) copyScopeAttributes(currentlyTrack, bar);
+                        if (currentlyIndicator) copyScopeAttributes(currentlyIndicator, fill);
+                    }
+
                     if (fill) {
                         fill.style.width = (pct !== null ? pct : 0) + '%';
                     }
 
-                    var resetBlock = findResetBlock(weeklyEl) || { resetEl: weeklyEl };
+                    var resetBlock = findResetBlock(bar) || { resetEl: weeklyEl };
                     var resetText = resetBlock.resetEl ? resetBlock.resetEl.textContent : '';
                     if (!/resets?/i.test(resetText)) {
                         // Fallback absolute reset for weekly limit
@@ -589,6 +597,16 @@
 
     function normalizeText(text) {
         return (text || '').replace(/\s+/g, ' ').trim();
+    }
+
+    function copyScopeAttributes(src, dest) {
+        if (!src || !dest) return;
+        for (var i = 0; i < src.attributes.length; i++) {
+            var attr = src.attributes[i];
+            if (attr.name.indexOf('_ngcontent-') === 0) {
+                dest.setAttribute(attr.name, attr.value);
+            }
+        }
     }
 
     function normalizeKey(text) {
