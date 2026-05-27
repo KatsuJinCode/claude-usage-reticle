@@ -104,17 +104,18 @@ The delta label color uses dynamic scaling:
 | Custom windows | Weekly bars can compress expected pace into active days/hours (Extension only) |
 | Event-driven refresh | Updates on page changes, focus, and visibility changes |
 | Soft shadows | Text has soft drop shadow for readability |
-| Google Gemini Support | Full support for tracking Google Gemini usage limits on `gemini.google.com/usage` |
-| Hourly & Weekly Progression | Real-time pacing reticles on both Hourly/Session limits and Weekly limits (Gemini) |
-| Cloned Weekly Limit Card | Deep-clones the hourly bar DOM structure on Gemini to generate a Weekly limit card with absolute layout/style parity |
-| Local Scraping & Logging | Opt-in toggle to log/save scraped usage stats to local/extension storage (Gemini-only; required due to lack of public API) |
-| Customizable Refresh Slider | Range slider (5 to 120 minutes) to adjust auto-refresh rates (Gemini-only) |
-| Dynamic Layout Spacing | Automatically injects 26px vertical margins around progress tracks to prevent reticle labels from overlapping reset times or headers (Gemini, Codex, Z.ai, MiniMax) |
+| Google Gemini Support | Full support for tracking Google Gemini usage limits on `gemini.google.com/usage` — no public API exists, so data is scraped directly from the page |
+| Hourly & Weekly Progression | Real-time pacing reticles on both the Hourly/Session (5h rolling) limit and the Weekly limit bars (Gemini) |
+| Cloned Weekly Limit Card | Gemini does not render a native weekly progress bar, so the script deep-clones the hourly card DOM (classes, styles, text elements) to construct a visually identical Weekly limit card alongside it |
+| Local Scraping & Logging | Opt-in toggle (Gemini-only) that, on each page refresh, writes the latest scraped usage snapshot to `localStorage` (key: `geminiUsageScrapedData`) on `gemini.google.com` and, when using the extension, to `chrome.storage.local`. There is no automatic file export — see Limitations. |
+| Customizable Refresh Slider | Range slider (5–120 minutes, Gemini-only) to control how often the page auto-reloads to capture fresh usage numbers, since Gemini has no reactive data push |
+| Dynamic Layout Spacing | On Claude, usage bars are unobstructed — nothing sits directly above or below the progress track. On the other four providers (Gemini, Codex, Z.ai, MiniMax) the bars are sandwiched vertically by text you need to read: a title/label above and a reset timestamp below. Without extra clearance the 22px reticle labels collide with that text. The script automatically injects `margin-top: 26px !important` and `margin-bottom: 26px !important` on non-Claude progress tracks to push sibling text clear of the labels. |
 
 ## Limitations
 
-- The script relies on Claude's current page structure. If Anthropic updates their UI, it may need updating.
+- The script relies on each provider's current page structure. If a provider updates their UI, the relevant handler may need updating.
 - The bookmarklet runs once per click. Navigate away and back? Click it again.
+- **Gemini Local Scraping — storage only, no file export**: When local scraping is enabled the snapshot is written to `localStorage` on `gemini.google.com` (key: `geminiUsageScrapedData`) and to `chrome.storage.local` (extension only). There is no built-in file download or configurable output path. To read the data: open DevTools on the Gemini usage page → Console → `JSON.parse(localStorage.getItem('geminiUsageScrapedData'))`. A proper export/file-output feature is not yet implemented.
 
 **Last tested:** May 2026
 
@@ -145,15 +146,14 @@ When the change is in shared code that affects both sides, do both releases in t
 ## Version History
 
 ### Userscript v3.8 / Extension v3.7.0 (Current)
-- Implemented **Cross-Provider Dynamic Spacing** to automatically add vertical margins (`margin-top: 26px !important; margin-bottom: 26px !important;`) around progress tracks for all providers except Claude (Gemini, Codex, Z.ai, MiniMax). This prevents reticle labels from obscuring reset timestamps, header text, and other sibling elements.
-- Parity alignment of layout and spacing styling between the Tampermonkey userscript and Chrome Extension content script.
-
-### Userscript v3.7 / Extension v3.6.0
-- Added full support for **Google Gemini** at `gemini.google.com/usage`.
-- Reconstructed the Gemini weekly limit card using direct deep-cloning of the hourly limit card to guarantee 100% style, typography, and Tailwind class visual parity.
-- Implemented **Local Scraping & Logging** as an opt-in toggle to log scraped usage data to local/extension storage.
-- Added customizable **Refresh Interval** (5 to 120 minutes slider) and **Over-Budget Color Threshold** settings to change colors dynamically based on budget deviation.
-- Cleaned up reset-timestamp parsing to prevent overlapping/concatenated percentage text.
+- Added full support for **Google Gemini** at `gemini.google.com/usage`. Google does not expose a public API for usage data, so all data is scraped directly from the DOM.
+- Injected real-time pacing reticles on both the **Hourly/Session (5h rolling)** and **Weekly** limit bars on the Gemini usage page.
+- Reconstructed the Gemini **Weekly limit card** by deep-cloning the hourly card's DOM structure (all classes, text sub-elements, and styles) since Gemini does not render a native weekly progress bar. This guarantees absolute layout and typography parity between the two cards.
+- Implemented **Local Scraping & Logging** (Gemini-only, opt-in toggle): on each page refresh, saves the current hourly and weekly usage percentages and reset times to `localStorage` on `gemini.google.com` and to `chrome.storage.local` (extension). No file export exists yet — data is read via DevTools console.
+- Added a **Refresh Interval slider** (5–120 minutes, Gemini-only) and an **Over-Budget Color Threshold slider** so users can tune how aggressively the reticles change color.
+- Cleaned up reset-timestamp parsing to strip concatenated percentage text that appeared alongside the reset time string.
+- Fixed **Cross-Provider Reticle Label Collisions**: Claude's usage bars are unobstructed — nothing sits directly above or below the progress track. The other four supported providers (Gemini, Codex, Z.ai, MiniMax) sandwich their bars vertically between a title/label above and a reset timestamp below. Without extra clearance, the 22px-tall reticle labels collide with that surrounding text. The fix passes `platform.id` through to `renderGenericBar` and injects `margin-top: 26px !important` and `margin-bottom: 26px !important` on the progress track for every platform except Claude, pushing sibling text clear of the labels on all four affected providers.
+- Verified parity of all Gemini and spacing changes between the Tampermonkey userscript and the Chrome Extension content script.
 
 ### Userscript v3.4 / Extension v3.3.0
 - Fixed a latent init-order bug that had been there since v3.0. The boot section called `init()` at the top of the IIFE, but the `platforms` object literal isn't assigned until 150 lines further down. Because `var` declarations hoist names without values, the first `currentPlatform()` lookup saw `platforms === undefined`, silently returned null, `isUsagePage()` returned false, and the script bailed without drawing anything. Sometimes a later DOM mutation would re-trigger the render and "heal" it; sometimes the page sat empty. Moved the `init()` call to the bottom of the IIFE so every declaration has run before init touches them
