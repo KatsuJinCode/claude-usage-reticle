@@ -1150,7 +1150,14 @@
         for (var i = 0; i < spans.length; i++) {
             var span = spans[i];
             if (span === resetEl) continue;
-            if (resetEl && span.parentElement !== block && (resetEl.contains(span) || span.contains(resetEl))) continue;
+            if (resetEl && (resetEl.contains(span) || span.contains(resetEl))) {
+                if (span.contains(resetEl)) continue;
+                var candidate = normalizeText(span.textContent || '');
+                if (!candidate || /resets?/i.test(candidate)) continue;
+                var candidateKey = normalizeKey(candidate);
+                if (getWindowHours(candidateKey)) return span;
+                continue;
+            }
             var text = normalizeText(span.textContent || '');
             if (!text || /used\s*$/i.test(text) || /^resets/i.test(text)) continue;
             var key = normalizeKey(text);
