@@ -1150,19 +1150,28 @@
         return null;
     }
 
+    var RESET_RE = /resets?/i;
+    var WEEKDAY_TIME_RE = /^(?:mon|tue|wed|thu|fri|sat|sun)\s+\d{1,2}:\d{2}\s*(?:am|pm)?$/i;
+
     function findResetBlock(bar) {
         var node = bar.parentElement;
+        var best = null;
         for (var depth = 0; depth < 10 && node; depth++) {
             var nodes = node.querySelectorAll('span, div, p, small, font');
             for (var i = 0; i < nodes.length; i++) {
-                var nc = nodes[i].textContent || '';
-                if (/resets?/i.test(nc) || /^(?:mon|tue|wed|thu|fri|sat|sun)\s+\d{1,2}:\d{2}\s*(?:am|pm)?$/i.test(nc.replace(/\s+/g, ' ').trim())) {
-                    return {block: node, resetEl: nodes[i]};
+                var nc = (nodes[i].textContent || '').replace(/\s+/g, ' ').trim();
+                if (RESET_RE.test(nc) || WEEKDAY_TIME_RE.test(nc)) {
+                    if (!best) best = {block: node, resetEl: nodes[i]};
+                    var spans = node.querySelectorAll('span');
+                    for (var s = 0; s < spans.length; s++) {
+                        var t = normalizeText(spans[s].textContent || '').toLowerCase();
+                        if (getWindowHours(t)) return {block: node, resetEl: nodes[i]};
+                    }
                 }
             }
             node = node.parentElement;
         }
-        return null;
+        return best;
     }
 
     function findTitle(block, resetEl) {
