@@ -500,7 +500,18 @@
                     }
                     var pct = parsePercentFromElement(currentlyEl);
                     var resetBlock = findResetBlock(bar) || { resetEl: currentlyEl };
-                    var resetText = resetBlock.resetEl ? resetBlock.resetEl.textContent : '';
+                    var resetTextEl = currentlyEl.querySelector('p[class*="reset"]') || (resetBlock.resetEl || currentlyEl);
+                    var resetText = resetTextEl.textContent || '';
+                    resetText = resetText.replace(/\s+/g, ' ').trim();
+                    if (/resets?/i.test(resetText) && !/\d+[mdh]\s+(?:OVER|UNDER)/i.test(resetText)) {
+                        // Use the clean reset text from the dedicated element
+                    } else {
+                        resetText = resetBlock.resetEl ? (function() {
+                            var raw = resetBlock.resetEl.textContent || '';
+                            var m = raw.match(/resets?\s+at\s+\d{1,2}:\d{2}\s*(?:am|pm)/i);
+                            return m ? m[0] : raw;
+                        })() : '';
+                    }
                     if (!/resets?/i.test(resetText)) {
                         // Fallback relative resets for Gemini 5-hour rolling limit
                         var now = Date.now();
