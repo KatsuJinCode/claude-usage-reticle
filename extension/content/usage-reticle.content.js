@@ -3,7 +3,7 @@
 
     var ROOT_KEY = '__claudeUsageReticle';
     var SCRIPT_VERSION = '3.8.0';
-    var BUILD_ID = '3.7.0-20260526-layout-collision-fix';
+    var BUILD_ID = '3.8.0-20260528-dom-restructure-fix';
     var STYLE_ATTR = 'data-usage-reticle-style';
     var ITEM_ATTR = 'data-usage-reticle-item';
     var CONTROL_ATTR = 'data-usage-reticle-control';
