@@ -538,8 +538,16 @@
                     }
 
                     var pctWeekly = parsePercentFromElement(nativeWrapper);
-                    var resetBlock = findResetBlock(nativeWrapper) || { resetEl: nativeWrapper };
-                    var resetTextWeekly = resetBlock.resetEl ? resetBlock.resetEl.textContent : '';
+                    var weeklyResetTextEl = weeklyEl.querySelector('p[class*="reset"]') || (nativeWrapper.querySelector('p[class*="reset"]'));
+                    var resetTextWeekly = weeklyResetTextEl ? weeklyResetTextEl.textContent : '';
+                    if (!/resets?/i.test(resetTextWeekly)) {
+                        var resetBlock = findResetBlock(nativeWrapper) || { resetEl: nativeWrapper };
+                        resetTextWeekly = resetBlock.resetEl ? (function() {
+                            var raw = resetBlock.resetEl.textContent || '';
+                            var m = raw.match(/resets?\s+(?:at\s+)?(?:\d{1,2}:\d{2}\s*(?:am|pm)|[a-z]+\s+\d{1,2}(?:\s+at\s+\d{1,2}:\d{2}\s*(?:am|pm))?)/i);
+                            return m ? m[0] : raw;
+                        })() : '';
+                    }
                     if (!/resets?/i.test(resetTextWeekly)) {
                         // Fallback absolute reset for weekly limit
                         resetTextWeekly = 'Resets Sat 10:59 AM';
