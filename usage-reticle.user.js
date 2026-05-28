@@ -1169,7 +1169,7 @@
         for (var i = 0; i < spans.length; i++) {
             var span = spans[i];
             if (span === resetEl) continue;
-            if (resetEl && (resetEl.contains(span) || span.contains(resetEl))) continue;
+            if (resetEl && span.parentElement !== block && (resetEl.contains(span) || span.contains(resetEl))) continue;
             var text = normalizeText(span.textContent || '');
             if (!text || /used\s*$/i.test(text) || /^resets/i.test(text)) continue;
             var key = normalizeKey(text);
