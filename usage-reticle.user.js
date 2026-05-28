@@ -1155,7 +1155,8 @@
         for (var depth = 0; depth < 10 && node; depth++) {
             var nodes = node.querySelectorAll('span, div, p, small, font');
             for (var i = 0; i < nodes.length; i++) {
-                if (/resets?/i.test(nodes[i].textContent || '')) {
+                var nc = nodes[i].textContent || '';
+                if (/resets?/i.test(nc) || /^(?:mon|tue|wed|thu|fri|sat|sun)\s+\d{1,2}:\d{2}\s*(?:am|pm)?$/i.test(nc.replace(/\s+/g, ' ').trim())) {
                     return {block: node, resetEl: nodes[i]};
                 }
             }
