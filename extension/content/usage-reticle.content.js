@@ -1136,23 +1136,18 @@
 
     function findResetBlock(bar) {
         var node = bar.parentElement;
-        var best = null;
         for (var depth = 0; depth < 10 && node; depth++) {
+            node = node.parentElement;
+            if (!node) break;
             var nodes = node.querySelectorAll('span, div, p, small, font');
             for (var i = 0; i < nodes.length; i++) {
                 var nc = (nodes[i].textContent || '').replace(/\s+/g, ' ').trim();
-                if (RESET_RE.test(nc) || WEEKDAY_TIME_RE.test(nc)) {
-                    if (!best) best = {block: node, resetEl: nodes[i]};
-                    var spans = node.querySelectorAll('span');
-                    for (var s = 0; s < spans.length; s++) {
-                        var t = normalizeText(spans[s].textContent || '').toLowerCase();
-                        if (getWindowHours(t)) return {block: node, resetEl: nodes[i]};
-                    }
+                if (RESET_RE.test(nc) || (depth > 0 && WEEKDAY_TIME_RE.test(nc))) {
+                    return {block: node, resetEl: nodes[i]};
                 }
             }
-            node = node.parentElement;
         }
-        return best;
+        return null;
     }
 
     function findTitle(block, resetEl) {
