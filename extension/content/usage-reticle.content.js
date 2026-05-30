@@ -1156,6 +1156,8 @@
     function findResetBlock(bar) {
         var node = bar.parentElement;
         for (var depth = 0; depth < 10 && node; depth++) {
+            node = node.parentElement;
+            if (!node) break;
             var nodes = node.querySelectorAll('span, div, p, small, font');
             for (var i = 0; i < nodes.length; i++) {
                 var nc = (nodes[i].textContent || '').replace(/\s+/g, ' ').trim();
@@ -1163,7 +1165,6 @@
                     return {block: node, resetEl: nodes[i]};
                 }
             }
-            node = node.parentElement;
         }
         return null;
     }
