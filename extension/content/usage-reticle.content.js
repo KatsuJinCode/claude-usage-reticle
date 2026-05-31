@@ -1718,15 +1718,15 @@
         var overlayLeft = Math.min(nowOnBar, usageOnBar);
         var overlayWidth = Math.abs(nowOnBar - usageOnBar);
 
-        var trackedWidth = Math.min(nowOnBar, usageOnBar);
-        if (trackedWidth > 0.1) {
-            var tracked = createItem('reticle-overlay');
-            tracked.style.left = '0%';
-            tracked.style.width = trackedWidth + '%';
-            tracked.style.background = flip
-                ? 'hsla(0, 0%, 100%, 0.88)'
-                : 'hsla(217, 91%, 60%, 0.75)';
-            host.appendChild(tracked);
+        if (!flip) {
+            var trackedWidth = Math.min(nowOnBar, usageOnBar);
+            if (trackedWidth > 0.1) {
+                var tracked = createItem('reticle-overlay');
+                tracked.style.left = '0%';
+                tracked.style.width = trackedWidth + '%';
+                tracked.style.background = 'hsla(217, 91%, 60%, 0.75)';
+                host.appendChild(tracked);
+            }
         }
 
         if (overlayWidth > 0.1) {
