@@ -1800,23 +1800,18 @@
         var overlayLeft = Math.min(nowOnBar, usageOnBar);
         var overlayWidth = Math.abs(nowOnBar - usageOnBar);
 
-        // Blue "on-track used" segment: the portion of the bar that's been used
-        // up to the lesser of (now, usage). Only red/green is allowed between
-        // the two reticles; everything used to the left of that band must be
-        // blue. Without this overlay, the host page's native fill (MiniMax
-        // paints red on over-budget rows, green on under-budget rows) shows
-        // through and the eye reads the whole bar as that single color. Only
-        // applied for fillDirection === 'used' platforms; 'remaining' bars
-        // (Codex) have an inverted visual model and are left untouched.
-        if (!flip) {
-            var trackedWidth = Math.min(nowOnBar, usageOnBar);
-            if (trackedWidth > 0.1) {
-                var tracked = createItem('reticle-overlay');
-                tracked.style.left = '0%';
-                tracked.style.width = trackedWidth + '%';
+        var trackedWidth = Math.min(nowOnBar, usageOnBar);
+        if (trackedWidth > 0.1) {
+            var tracked = createItem('reticle-overlay');
+            tracked.style.left = '0%';
+            tracked.style.width = trackedWidth + '%';
+            if (flip) {
+                tracked.style.background = 'rgba(0, 0, 0, 0)';
+                tracked.style.background = 'var(--bar-track-bg, rgba(200, 200, 200, 0.85))';
+            } else {
                 tracked.style.background = 'hsla(217, 91%, 60%, 0.75)';
-                host.appendChild(tracked);
             }
+            host.appendChild(tracked);
         }
 
         if (overlayWidth > 0.1) {
