@@ -383,7 +383,7 @@
                 // Image Understanding must match BEFORE Image Generation falls
                 // through to the 24h default. Using a strict word-boundary regex
                 // so "Image Generation" never matches the Understanding clause.
-                var is5hBucket = function(t) { return /Text\s+Generation|Image\s+Understanding|Web\s+Search/i.test(t); };
+                var is5hBucket = function(t) { return /Text\s+Generation|MCP\s+Understand|Image\s+Understanding|Web\s+Search/i.test(t); };
                 var fiveHourResetText = '';
                 rowEls.forEach(function(rowEl) {
                     if (fiveHourResetText) return;
