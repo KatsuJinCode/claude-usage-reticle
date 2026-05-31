@@ -1669,6 +1669,7 @@
         var nowPos = metrics.nowPos;
         var diffPct = usagePos - nowPos;
         var color = getColor(diffPct);
+        if (flip && diffPct < 0) color = getColorCodexUnder(diffPct);
         var raw = Math.min(Math.abs(diffPct) / 100 * 2, 1);
         var intensity = 0.35 + 0.65 * raw;
 
