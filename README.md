@@ -145,7 +145,12 @@ When the change is in shared code that affects both sides, do both releases in t
 
 ## Version History
 
-### Userscript v3.8 / Extension v3.7.0 (Current)
+### Userscript v3.10 / Extension v3.10.0 (Current)
+- **Fixed Claude current-position regression**: `findResetBlock()` had its DOM traversal order changed in v3.9 — `node = node.parentElement` was moved from the top of the loop to the bottom, causing the first iteration to search the bar's immediate parent instead of its grandparent. This matched wrong elements (bar internals instead of the actual reset text), producing stale `nowPos` values that froze the "current time" reticle in place. Reverted to top-of-loop traversal.
+- **Fixed Codex overlay color invisible against native bar**: Codex's native progress bars are green for under-budget rows. The reticle's green under-budget overlay was the same hue, making the overlay appear to stretch from 0% to the now-marker instead of between the two reticles. Changed Codex (and all `fillDirection: 'remaining'` platforms) to use **blue** for under-budget instead of green (hue 217 vs 142), matching the reticle label color via `getColorCodexUnder()`. Over-budget stays red.
+- **Fixed MiniMax "MCP Understand Image" bucketing**: MiniMax renamed "Image Understanding" to "MCP Understand Image". The 5-hour bucket regex (`/Image\s+Understanding/`) no longer matched, causing it to fall into the 24-hour bucket with wrong reset calculations. Added `MCP\s+Understand` to the 5h bucket regex. Also covers "MCP Web Search" (already matched by `Web\s+Search` but now explicit).
+
+### Userscript v3.8 / Extension v3.7.0
 - Added full support for **Google Gemini** at `gemini.google.com/usage`. Google does not expose a public API for usage data, so all data is scraped directly from the DOM.
 - Injected real-time pacing reticles on both the **Hourly/Session (5h rolling)** and **Weekly** limit bars on the Gemini usage page.
 - Reconstructed the Gemini **Weekly limit card** by deep-cloning the hourly card's DOM structure (all classes, text sub-elements, and styles) since Gemini does not render a native weekly progress bar. This guarantees absolute layout and typography parity between the two cards.
