@@ -773,6 +773,12 @@
         }
     }
 
+    function getColorCodexUnder(pct) {
+        var raw = Math.min(Math.abs(pct) / 100 * 2, 1);
+        var p = 0.35 + 0.65 * raw;
+        return 'hsl(217,' + (5 + p * 70) + '%,' + (95 - p * 55) + '%)';
+    }
+
     function parseRgb(value) {
         var match = String(value || '').match(/rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?/i);
         if (!match) return null;
