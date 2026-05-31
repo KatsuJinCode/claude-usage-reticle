@@ -1805,12 +1805,9 @@
             var tracked = createItem('reticle-overlay');
             tracked.style.left = '0%';
             tracked.style.width = trackedWidth + '%';
-            if (flip) {
-                tracked.style.background = 'rgba(0, 0, 0, 0)';
-                tracked.style.background = 'var(--bar-track-bg, rgba(200, 200, 200, 0.85))';
-            } else {
-                tracked.style.background = 'hsla(217, 91%, 60%, 0.75)';
-            }
+            tracked.style.background = flip
+                ? 'hsla(0, 0%, 100%, 0.88)'
+                : 'hsla(217, 91%, 60%, 0.75)';
             host.appendChild(tracked);
         }
 
