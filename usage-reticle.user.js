@@ -1835,7 +1835,9 @@
                 var under = createItem('reticle-overlay');
                 under.style.left = overlayLeft + '%';
                 under.style.width = overlayWidth + '%';
-                under.style.background = 'hsla(142,' + (40 + intensity * 30) + '%,' + (50 - intensity * 10) + '%,' + (0.4 + intensity * 0.35) + ')';
+                under.style.background = flip
+                    ? 'hsla(217,' + (50 + intensity * 40) + '%,' + (55 - intensity * 15) + '%,' + (0.55 + intensity * 0.3) + ')'
+                    : 'hsla(142,' + (40 + intensity * 30) + '%,' + (50 - intensity * 10) + '%,' + (0.4 + intensity * 0.35) + ')';
                 host.appendChild(under);
             }
         }
