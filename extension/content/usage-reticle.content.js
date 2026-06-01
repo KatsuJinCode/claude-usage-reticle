@@ -620,7 +620,7 @@
                     }
 
                     if (state.settings.geminiScrapingEnabled) {
-                        saveScrapedData({
+                        saveScrapedData('geminiUsageScrapedData', {
                             currentlyPercent: pct !== null ? pct : 0,
                             weeklyPercent: pctWeekly !== null ? pctWeekly : 0,
                             currentlyReset: resetText || '',
