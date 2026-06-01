@@ -421,7 +421,8 @@
                     return mm ? mm[0] : '';
                 }
                 var snapshot = {
-                    timestamp: Date.now(),
+                    capturedAt: Date.now(),
+                    provider: 'minimax',
                     url: location.href,
                     rows: []
                 };
@@ -434,22 +435,27 @@
                     var labelSpan = labelCol.querySelector('span.truncate');
                     var label = ((labelSpan && labelSpan.textContent) || '').trim();
                     var resetText = readResetText(labelCol);
-                    var infoText = (infoCol.textContent || '').replace(/\s+/g, ' ').trim();
+                    var display = (infoCol.textContent || '').replace(/\s+/g, ' ').trim();
                     var fill = trackCol.querySelector('div[style*="width"]');
-                    var unlimitedFill = trackCol.querySelector('[class*="unlimited"]');
                     var pct = null;
-                    var rowState;
                     if (fill) {
                         var widthMatch = (fill.style.width || '').match(/([\d.]+)%/);
                         if (widthMatch) pct = parseFloat(widthMatch[1]);
-                        rowState = {label: label, state: 'limited', percentUsed: pct, resetText: resetText, infoText: infoText};
-                    } else if (unlimitedFill) {
-                        rowState = {label: label, state: 'unlimited', resetText: resetText, infoText: infoText};
-                    } else {
-                        rowState = {label: label, state: 'unknown', resetText: resetText, infoText: infoText};
                     }
-                    snapshot.rows.push(rowState);
-                    if (rowState.state === 'limited' && typeof pct === 'number' && !isNaN(pct)) {
+                    // percentUsed === null means "this row is not a percentage
+                    // right now" (e.g., M3's Weekly limit currently renders as
+                    // "∞ Unlimited"). The `display` string is what the page
+                    // literally rendered, verbatim except for whitespace runs
+                    // collapsed to single spaces. Consumers that need to react
+                    // to "is this row a number?" should test percentUsed !== null;
+                    // consumers that want a human-readable label use `display`.
+                    snapshot.rows.push({
+                        label: label,
+                        percentUsed: (typeof pct === 'number' && !isNaN(pct)) ? pct : null,
+                        display: display,
+                        resetText: resetText
+                    });
+                    if (typeof pct === 'number' && !isNaN(pct)) {
                         var bucket = classify(label);
                         rows.push({
                             barElement: trackCol,
