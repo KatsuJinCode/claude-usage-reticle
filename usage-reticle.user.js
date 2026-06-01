@@ -1534,6 +1534,7 @@
         var refreshIntervalVal = panel.querySelector('[data-reticle-refresh-interval-val]');
         var overBudgetThreshold = panel.querySelector('[data-reticle-over-budget-threshold]');
         var thresholdVal = panel.querySelector('[data-reticle-threshold-val]');
+        var minimaxScraping = panel.querySelector('[data-reticle-minimax-scraping]');
 
         panel.setAttribute('data-reticle-theme', detectTheme());
         toggle.setAttribute('aria-pressed', String(settings.activeWindowEnabled));
@@ -1551,6 +1552,7 @@
         if (refreshIntervalVal) refreshIntervalVal.textContent = (settings.geminiRefreshInterval || 30) + ' mins';
         if (overBudgetThreshold) overBudgetThreshold.value = settings.overBudgetThreshold || 0;
         if (thresholdVal) thresholdVal.textContent = (settings.overBudgetThreshold || 0) + '%';
+        if (minimaxScraping) minimaxScraping.checked = !!settings.minimaxScrapingEnabled;
     }
 
     function renderControls(anchor) {
