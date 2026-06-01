@@ -376,7 +376,9 @@
                 // div; its only child for normal rows is a `div[style="width:N%"]`
                 // fill. For "Unlimited" rows (currently the Weekly limit) the fill
                 // is `ui-meter-unlimited-fill` with no width — those rows are
-                // skipped entirely because there is no over/under budget to plot.
+                // not emitted as reticle rows (there is no over/under budget to
+                // plot) but ARE recorded in the scrape snapshot below so an
+                // outside observer can tell the instant Weekly flips off Unlimited.
                 //
                 // M3 rows observed: "5h limit", "Weekly limit" (unlimited), and
                 // "Video bonus" (3-per-day count). The bucket-by-label-text logic
@@ -392,40 +394,57 @@
                     if (/weekly/i.test(label)) return {windowHours: 24 * 7,  isSession: false};
                     return                            {windowHours: 24,      isSession: false};
                 }
+                function readResetText(labelCol) {
+                    var resetEl = labelCol.querySelector('div.text-\\[11px\\]');
+                    if (resetEl) return (resetEl.textContent || '').trim();
+                    var mm = (labelCol.textContent || '').match(/Resets\s+in\s+(?:\d+\s*hr)?\s*(?:\d+\s*min)?/i);
+                    return mm ? mm[0] : '';
+                }
+                var snapshot = {
+                    timestamp: Date.now(),
+                    url: location.href,
+                    rows: []
+                };
                 var rows = [];
                 rowEls.forEach(function(rowEl) {
                     if (rowEl.children.length < 3) return;
                     var labelCol = rowEl.children[0];
                     var trackCol = rowEl.children[1];
-                    var fill = trackCol.querySelector('div[style*="width"]');
-                    if (!fill) return;  // unlimited row (no width) → nothing to plot
-                    var widthMatch = (fill.style.width || '').match(/([\d.]+)%/);
-                    if (!widthMatch) return;
-                    var percentUsed = parseFloat(widthMatch[1]);
+                    var infoCol  = rowEl.children[2];
                     var labelSpan = labelCol.querySelector('span.truncate');
                     var label = ((labelSpan && labelSpan.textContent) || '').trim();
-                    // Reset text lives in a small sibling below the label span.
-                    // The class is `text-[11px] ...`; fall back to scanning the
-                    // labelCol text if the class moves.
-                    var resetEl = labelCol.querySelector('div.text-\\[11px\\]');
-                    var resetText = '';
-                    if (resetEl) {
-                        resetText = (resetEl.textContent || '').trim();
+                    var resetText = readResetText(labelCol);
+                    var infoText = (infoCol.textContent || '').replace(/\s+/g, ' ').trim();
+                    var fill = trackCol.querySelector('div[style*="width"]');
+                    var unlimitedFill = trackCol.querySelector('[class*="unlimited"]');
+                    var pct = null;
+                    var rowState;
+                    if (fill) {
+                        var widthMatch = (fill.style.width || '').match(/([\d.]+)%/);
+                        if (widthMatch) pct = parseFloat(widthMatch[1]);
+                        rowState = {label: label, state: 'limited', percentUsed: pct, resetText: resetText, infoText: infoText};
+                    } else if (unlimitedFill) {
+                        rowState = {label: label, state: 'unlimited', resetText: resetText, infoText: infoText};
                     } else {
-                        var mm = (labelCol.textContent || '').match(/Resets\s+in\s+(?:\d+\s*hr)?\s*(?:\d+\s*min)?/i);
-                        if (mm) resetText = mm[0];
+                        rowState = {label: label, state: 'unknown', resetText: resetText, infoText: infoText};
                     }
-                    var bucket = classify(label);
-                    rows.push({
-                        barElement: trackCol,
-                        label: label.toLowerCase().slice(0, 60),
-                        percentUsed: percentUsed,
-                        fillDirection: 'used',
-                        resetText: resetText,
-                        windowHours: bucket.windowHours,
-                        isSession: bucket.isSession
-                    });
+                    snapshot.rows.push(rowState);
+                    if (rowState.state === 'limited' && typeof pct === 'number' && !isNaN(pct)) {
+                        var bucket = classify(label);
+                        rows.push({
+                            barElement: trackCol,
+                            label: label.toLowerCase().slice(0, 60),
+                            percentUsed: pct,
+                            fillDirection: 'used',
+                            resetText: resetText,
+                            windowHours: bucket.windowHours,
+                            isSession: bucket.isSession
+                        });
+                    }
                 });
+                if (state.settings.minimaxScrapingEnabled && snapshot.rows.length) {
+                    saveScrapedData('minimaxUsageScrapedData', snapshot);
+                }
                 return rows;
             },
             parseReset: function(text) {
