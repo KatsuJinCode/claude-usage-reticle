@@ -1600,8 +1600,8 @@
             '</div>' +
             '<div class="usage-reticle-settings__minimax" style="margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(128,128,128,0.2); display: flex; flex-direction: column; gap: 8px;">' +
                 '<div class="usage-reticle-settings__title" style="font-weight: bold; font-size: 12px;">MiniMax Settings</div>' +
-                '<label style="display: flex; align-items: center; gap: 6px;"><input type="checkbox" data-reticle-minimax-scraping> Enable local scraping &amp; logging</label>' +
-                '<div style="font-size: 11px; opacity: 0.7;">Saves the latest snapshot of the 5h / Weekly / Video bonus rows to <code>localStorage[\'minimaxUsageScrapedData\']</code> on each page load and auto-reload (every ~10 min while focused). Lets an outside watcher tell the instant Weekly flips off Unlimited.</div>' +
+                '<label style="display: flex; align-items: center; gap: 6px;"><input type="checkbox" data-reticle-minimax-scraping> Save current usage to local storage</label>' +
+                '<div style="font-size: 11px; opacity: 0.7;">Writes the latest scrape of the MiniMax usage page to <code>localStorage[\'minimaxUsageScrapedData\']</code> on each page load and auto-reload (every ~10 min while focused). Lets other tools on this machine read your current MiniMax usage without hitting the MiniMax API. Snapshot carries a <code>capturedAt</code> epoch-ms timestamp so the consumer can detect staleness.</div>' +
             '</div>';
 
         var days = panel.querySelector('[data-reticle-days]');
