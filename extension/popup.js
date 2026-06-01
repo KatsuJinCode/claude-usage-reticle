@@ -58,6 +58,7 @@
             activeEnd: /^\d{2}:\d{2}$/.test(settings.activeEnd || '') ? settings.activeEnd : DEFAULT_SETTINGS.activeEnd,
             geminiScrapingEnabled: settings.geminiScrapingEnabled === undefined ? DEFAULT_SETTINGS.geminiScrapingEnabled : !!settings.geminiScrapingEnabled,
             geminiRefreshInterval: typeof settings.geminiRefreshInterval === 'number' ? settings.geminiRefreshInterval : DEFAULT_SETTINGS.geminiRefreshInterval,
+            minimaxScrapingEnabled: settings.minimaxScrapingEnabled === undefined ? DEFAULT_SETTINGS.minimaxScrapingEnabled : !!settings.minimaxScrapingEnabled,
             overBudgetThreshold: typeof settings.overBudgetThreshold === 'number' ? settings.overBudgetThreshold : DEFAULT_SETTINGS.overBudgetThreshold
         };
     }
