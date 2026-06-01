@@ -30,7 +30,7 @@ If your label shows `1d 5h OVER (15%)`, it means your usage is 15 percentage poi
 | Claude | `claude.ai` → Settings → Usage | Reticles on Current session + Weekly bars. Settings panel for active-window (days + hours). |
 | Codex | `chatgpt.com/codex/cloud/settings/analytics` | Reticles on 5h + Weekly usage limit cards (incl. GPT-5.3-Codex-Spark). |
 | Z.ai | `z.ai/manage-apikey/subscription` (click Usage tab) | Reticles on Weekly + Monthly quotas. 5 Hours Quota row not reticled — Z.ai does not expose a reset timestamp for the rolling 5h window. |
-| MiniMax | `platform.minimax.io/user-center/payment/token-plan` | Reticles on each Current Usage row (Text Gen, Audio, Video, Music, etc.). Newer plans add a weekly-limit row whose DOM hasn't been verified — open an issue if you have one and the reticle is missing. |
+| MiniMax / MiniMax M3 | `platform.minimax.io/console/usage` | Reticles on the 5h limit and the Video bonus daily counter. The Weekly limit currently displays as "Unlimited" on Yearly Max plans — those rows are skipped (no over/under to plot). The pre-M3 `/user-center/*` path is also matched for accounts still being migrated. |
 | Google Gemini | `gemini.google.com/usage` | Reticles on Current (Hourly) + Weekly bars. Visual cloning matches both cards perfectly. Local scraping toggle, custom refresh rates, and thresholds available. |
 
 ### Want another provider?
