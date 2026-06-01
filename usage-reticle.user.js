@@ -1683,6 +1683,16 @@
             });
         }
 
+        var minimaxScraping = panel.querySelector('[data-reticle-minimax-scraping]');
+        if (minimaxScraping) {
+            minimaxScraping.addEventListener('change', function(event) {
+                state.settings.minimaxScrapingEnabled = event.target.checked;
+                saveSettings();
+                updateControls();
+                scheduleRefresh(0);
+            });
+        }
+
         if (anchor.nextSibling) {
             anchor.parentElement.insertBefore(panel, anchor.nextSibling);
         } else {
