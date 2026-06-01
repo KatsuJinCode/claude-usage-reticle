@@ -694,15 +694,17 @@
         }
     }
 
-    function saveScrapedData(data) {
+    function saveScrapedData(storageKey, data) {
         var api = extensionApi();
         if (api && api.storage && api.storage.local) {
             try {
-                api.storage.local.set({ 'geminiUsageScrapedData': data });
+                var payload = {};
+                payload[storageKey] = data;
+                api.storage.local.set(payload);
             } catch (err) {}
         }
         try {
-            localStorage.setItem('geminiUsageScrapedData', JSON.stringify(data));
+            localStorage.setItem(storageKey, JSON.stringify(data));
         } catch (err) {}
     }
 
