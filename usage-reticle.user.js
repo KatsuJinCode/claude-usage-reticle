@@ -863,6 +863,7 @@
             if (/^\d{2}:\d{2}$/.test(saved.activeEnd || '')) settings.activeEnd = saved.activeEnd;
             if (typeof saved.geminiScrapingEnabled === 'boolean') settings.geminiScrapingEnabled = saved.geminiScrapingEnabled;
             if (typeof saved.geminiRefreshInterval === 'number') settings.geminiRefreshInterval = saved.geminiRefreshInterval;
+            if (typeof saved.minimaxScrapingEnabled === 'boolean') settings.minimaxScrapingEnabled = saved.minimaxScrapingEnabled;
             if (typeof saved.overBudgetThreshold === 'number') settings.overBudgetThreshold = saved.overBudgetThreshold;
         } catch (err) {}
         if (!settings.activeDays.length) settings.activeDays = DEFAULT_SETTINGS.activeDays.slice();
