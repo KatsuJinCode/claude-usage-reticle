@@ -1498,6 +1498,15 @@
         if (location.hostname === 'gemini.google.com') {
             return document.querySelector('[data-test-id="gxu-weekly"]') || document.querySelector('[data-testid="gxu-weekly"]');
         }
+        if (location.hostname === 'platform.minimax.io') {
+            // M3 console/usage layout: anchor below the article that wraps the
+            // three-row usage grid. The first such article on the page is the
+            // "My usage" panel; if that exact node moves, fall back to the
+            // first row's grid container.
+            var article = document.querySelector('article.rounded-lg.bg-ui-card');
+            if (article) return article;
+            return document.querySelector('div.grid.grid-cols-\\[120px_minmax\\(0\\,1fr\\)_auto\\]');
+        }
         var sections = Array.prototype.slice.call(document.querySelectorAll('section'));
         var fallback = sections[sections.length - 1] || null;
         for (var i = 0; i < sections.length; i++) {
