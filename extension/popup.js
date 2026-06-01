@@ -193,5 +193,10 @@
                 });
             });
         }
+        if (els.minimaxScraping) {
+            els.minimaxScraping.addEventListener('change', function(event) {
+                update(function() { state.settings.minimaxScrapingEnabled = event.target.checked; });
+            });
+        }
     }
 })();
