@@ -31,6 +31,7 @@
         "https://claude.ai/*",
         "https://chatgpt.com/codex/*",
         "https://z.ai/manage-apikey/*",
+        "https://platform.minimax.io/console/usage*",
         "https://platform.minimax.io/user-center/*",
         "https://gemini.google.com/usage"
       ],
