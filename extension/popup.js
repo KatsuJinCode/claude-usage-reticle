@@ -118,6 +118,7 @@
         if (els.refreshIntervalVal) els.refreshIntervalVal.textContent = (state.settings.geminiRefreshInterval || 30) + ' mins';
         if (els.overBudgetThreshold) els.overBudgetThreshold.value = state.settings.overBudgetThreshold || 0;
         if (els.thresholdVal) els.thresholdVal.textContent = (state.settings.overBudgetThreshold || 0) + '%';
+        if (els.minimaxScraping) els.minimaxScraping.checked = !!state.settings.minimaxScrapingEnabled;
     }
 
     function update(mutator) {
