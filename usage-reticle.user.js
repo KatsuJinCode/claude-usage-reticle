@@ -7,6 +7,7 @@
 // @match        https://claude.ai/*
 // @match        https://chatgpt.com/codex/*
 // @match        https://z.ai/manage-apikey/*
+// @match        https://platform.minimax.io/console/usage*
 // @match        https://platform.minimax.io/user-center/*
 // @match        https://gemini.google.com/usage
 // @icon         https://claude.ai/favicon.ico
