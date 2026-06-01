@@ -12,6 +12,7 @@
         activeEnd: '18:00',
         geminiScrapingEnabled: false,
         geminiRefreshInterval: 30,
+        minimaxScrapingEnabled: false,
         overBudgetThreshold: 0
     };
     var api = typeof browser !== 'undefined' ? browser : chrome;
