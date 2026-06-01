@@ -352,94 +352,77 @@
             supportsActiveWindow: false,
             match: function() { return location.hostname === 'platform.minimax.io'; },
             isUsagePage: function() {
-                return /^\/user-center/.test(location.pathname);
+                // M3 layout (post-2026-06-01) lives at /console/usage. The pre-M3
+                // /user-center/* path is kept here for accounts still being migrated.
+                return /^\/console\/usage(?:\/|$)/.test(location.pathname)
+                    || /^\/user-center/.test(location.pathname);
             },
             findRefreshButton: function() {
-                var headings = document.querySelectorAll('h2');
-                for (var i = 0; i < headings.length; i++) {
-                    if (/Current Usage/i.test(headings[i].textContent || '')) {
-                        var parent = headings[i].parentElement;
-                        return parent ? parent.querySelector('button') : null;
-                    }
-                }
+                // The M3 "Plan Usage" panel has no on-page refresh control — the
+                // only buttons in the panel are "Manage subscription" / "Recharge"
+                // / "Details", none of which re-fetch usage. setupAutoReload falls
+                // back to location.reload() when this returns null. (Pre-M3 layout
+                // had a refresh button next to the "Current Usage" h2; that h2 is
+                // gone in M3.)
                 return null;
             },
             findUsageRows: function() {
-                // MiniMax buckets (per operator ground-truth 2026-05-20):
-                //   5h bucket  — Text Generation, Image Understanding, Web Search.
-                //                Image GENERATION is NOT here — it's media, 24h.
-                //                All three 5h rows share one rolling window. Text
-                //                Generation's displayed "Resets in N hr M min"
-                //                is the canonical truth; the other rows may show
-                //                stale/wrong values.
-                //   24h bucket — everything else (TTS, video, music, lyrics,
-                //                music cover, Image Generation). MiniMax's per-row
-                //                displayed reset is unreliable ("20 hr" when
-                //                reality is "12 hr 18 min"). The actual reset is
-                //                fixed at 12:00 PM Eastern / 9:00 AM Pacific,
-                //                computed from the wall clock — DO NOT trust the
-                //                per-row text for these.
-                var rowEls = Array.from(document.querySelectorAll('div[class*="bg-[#F7F8FA]"]'));
-                // Image Understanding must match BEFORE Image Generation falls
-                // through to the 24h default. Using a strict word-boundary regex
-                // so "Image Generation" never matches the Understanding clause.
-                var is5hBucket = function(t) { return /Text\s+Generation|MCP\s+Understand|Image\s+Understanding|Web\s+Search/i.test(t); };
-                var fiveHourResetText = '';
-                rowEls.forEach(function(rowEl) {
-                    if (fiveHourResetText) return;
-                    var rowText = rowEl.textContent.replace(/\s+/g, ' ');
-                    if (!/Text\s+Generation/i.test(rowText)) return;
-                    var rm = rowText.match(/Resets\s+in\s+(?:\d+\s*hr)?\s*(?:\d+\s*min)?/i);
-                    if (rm) fiveHourResetText = rm[0];
-                });
-                var dailyResetText = (function() {
-                    try {
-                        var now = new Date();
-                        var tzPart = new Intl.DateTimeFormat('en-US', {timeZone: 'America/Los_Angeles', timeZoneName: 'shortOffset'}).formatToParts(now).find(function(p){return p.type === 'timeZoneName';});
-                        var offsetMatch = (tzPart && tzPart.value || '').match(/GMT([+-])(\d{1,2})/);
-                        if (!offsetMatch) return '';
-                        var offset = parseInt(offsetMatch[2], 10) * (offsetMatch[1] === '+' ? 1 : -1);
-                        var nineamPtInUtc = ((9 - offset) % 24 + 24) % 24;
-                        var reset = new Date(now);
-                        reset.setUTCHours(nineamPtInUtc, 0, 0, 0);
-                        if (reset <= now) reset.setUTCDate(reset.getUTCDate() + 1);
-                        var totalMin = Math.round((reset - now) / 60000);
-                        return 'Resets in ' + Math.floor(totalMin / 60) + ' hr ' + (totalMin % 60) + ' min';
-                    } catch (err) { return ''; }
-                })();
+                // M3 MiniMax console layout (2026-06-01): each row is a 3-column
+                // CSS grid
+                //     div.grid.grid-cols-[120px_minmax(0,1fr)_auto]
+                // with columns [label+reset | track | usage-text]. The track is
+                // a `relative w-full h-2 rounded-full overflow-hidden bg-ui-muted`
+                // div; its only child for normal rows is a `div[style="width:N%"]`
+                // fill. For "Unlimited" rows (currently the Weekly limit) the fill
+                // is `ui-meter-unlimited-fill` with no width — those rows are
+                // skipped entirely because there is no over/under budget to plot.
+                //
+                // M3 rows observed: "5h limit", "Weekly limit" (unlimited), and
+                // "Video bonus" (3-per-day count). The bucket-by-label-text logic
+                // from the pre-M3 layout (Text Generation / Image Understanding /
+                // Web Search / etc.) is gone: M3 collapsed everything into these
+                // three rows, and the rolling-vs-fixed daily reset distinction
+                // collapsed with it — each row carries its own "Resets in ..."
+                // string in the label column.
+                var ROW_SELECTOR = 'div.grid.grid-cols-\\[120px_minmax\\(0\\,1fr\\)_auto\\]';
+                var rowEls = Array.from(document.querySelectorAll(ROW_SELECTOR));
+                function classify(label) {
+                    if (/5h/i.test(label))     return {windowHours: 5,       isSession: true};
+                    if (/weekly/i.test(label)) return {windowHours: 24 * 7,  isSession: false};
+                    return                            {windowHours: 24,      isSession: false};
+                }
                 var rows = [];
                 rowEls.forEach(function(rowEl) {
-                    var track = rowEl.querySelector('div[class*="bg-[#F2F3F5]"]');
-                    if (!track) return;
-                    var fill = track.querySelector('div[style*="width"]');
-                    if (!fill) return;
-                    var rowText = rowEl.textContent.replace(/\s+/g, ' ');
-                    // The displayed "N / M" denominator runs straight into the
-                    // "P% Used" span with no whitespace ("...33 / 10033% Used"),
-                    // so a greedy \d+ on the row text grabs "10033". Read the
-                    // canonical percent from the fill bar's own style.width.
+                    if (rowEl.children.length < 3) return;
+                    var labelCol = rowEl.children[0];
+                    var trackCol = rowEl.children[1];
+                    var fill = trackCol.querySelector('div[style*="width"]');
+                    if (!fill) return;  // unlimited row (no width) → nothing to plot
                     var widthMatch = (fill.style.width || '').match(/([\d.]+)%/);
                     if (!widthMatch) return;
                     var percentUsed = parseFloat(widthMatch[1]);
-                    var titlePart = (rowText.split(/Usage:/)[0] || '').trim();
-                    var resetText, windowHours, isSession;
-                    if (is5hBucket(rowText)) {
-                        resetText = fiveHourResetText;
-                        windowHours = 5;
-                        isSession = true;
+                    var labelSpan = labelCol.querySelector('span.truncate');
+                    var label = ((labelSpan && labelSpan.textContent) || '').trim();
+                    // Reset text lives in a small sibling below the label span.
+                    // The class is `text-[11px] ...`; fall back to scanning the
+                    // labelCol text if the class moves.
+                    var resetEl = labelCol.querySelector('div.text-\\[11px\\]');
+                    var resetText = '';
+                    if (resetEl) {
+                        resetText = (resetEl.textContent || '').trim();
                     } else {
-                        resetText = dailyResetText;
-                        windowHours = 24;
-                        isSession = false;
+                        var mm = (labelCol.textContent || '').match(/Resets\s+in\s+(?:\d+\s*hr)?\s*(?:\d+\s*min)?/i);
+                        if (mm) resetText = mm[0];
                     }
+                    var bucket = classify(label);
                     rows.push({
-                        barElement: track,
-                        label: titlePart.toLowerCase().slice(0, 60),
+                        barElement: trackCol,
+                        label: label.toLowerCase().slice(0, 60),
                         percentUsed: percentUsed,
                         fillDirection: 'used',
                         resetText: resetText,
-                        windowHours: windowHours,
-                        isSession: isSession
+                        windowHours: bucket.windowHours,
+                        isSession: bucket.isSession
                     });
                 });
                 return rows;
