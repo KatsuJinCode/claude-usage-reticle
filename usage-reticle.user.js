@@ -394,19 +394,23 @@
                 // with columns [label+reset | track | usage-text]. The track is
                 // a `relative w-full h-2 rounded-full overflow-hidden bg-ui-muted`
                 // div; its only child for normal rows is a `div[style="width:N%"]`
-                // fill. For "Unlimited" rows (currently the Weekly limit) the fill
-                // is `ui-meter-unlimited-fill` with no width — those rows are
-                // not emitted as reticle rows (there is no over/under budget to
-                // plot) but ARE recorded in the scrape snapshot below so an
-                // outside observer can tell the instant Weekly flips off Unlimited.
+                // fill. Some rows have no width fill (e.g. M3's Weekly limit
+                // currently renders as "∞ Unlimited"): those rows are not
+                // emitted as reticle rows (no over/under budget to plot) but
+                // are still recorded in the scrape snapshot below with
+                // `percentUsed: null` and `display` carrying whatever the page
+                // rendered. The snapshot is for the local-usage-cache feature
+                // (opt-in `minimaxScrapingEnabled` setting) so other tools on
+                // this machine can read your current MiniMax usage without
+                // hitting the MiniMax API.
                 //
-                // M3 rows observed: "5h limit", "Weekly limit" (unlimited), and
-                // "Video bonus" (3-per-day count). The bucket-by-label-text logic
-                // from the pre-M3 layout (Text Generation / Image Understanding /
-                // Web Search / etc.) is gone: M3 collapsed everything into these
-                // three rows, and the rolling-vs-fixed daily reset distinction
-                // collapsed with it — each row carries its own "Resets in ..."
-                // string in the label column.
+                // M3 rows observed: "5h limit", "Weekly limit" (unlimited),
+                // and "Video bonus" (3-per-day count). The bucket-by-label-text
+                // logic from the pre-M3 layout (Text Generation / Image
+                // Understanding / Web Search / etc.) is gone: M3 collapsed
+                // everything into these three rows, and the rolling-vs-fixed
+                // daily reset distinction collapsed with it — each row carries
+                // its own "Resets in ..." string in the label column.
                 var ROW_SELECTOR = 'div.grid.grid-cols-\\[120px_minmax\\(0\\,1fr\\)_auto\\]';
                 var rowEls = Array.from(document.querySelectorAll(ROW_SELECTOR));
                 function classify(label) {
