@@ -129,6 +129,12 @@
     </div>
   </div>
 
+  <div class="group">
+    <span class="label-title">MiniMax Settings</span>
+    <label style="margin-top: 4px;"><input id="minimax-scraping" type="checkbox"> Enable local scraping &amp; logging</label>
+    <p class="hint" style="margin-top: 4px;">Saves the latest 5h / Weekly / Video bonus snapshot to <code>localStorage['minimaxUsageScrapedData']</code> on each page load and auto-reload (every ~10 min while focused). Lets an outside watcher tell the instant Weekly flips off Unlimited.</p>
+  </div>
+
   <div class="status"><span class="dot"></span> Settings save automatically</div>
 
   <script src="popup.js"></script>
