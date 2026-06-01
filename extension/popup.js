@@ -33,7 +33,8 @@
         geminiRefreshInterval: document.getElementById('gemini-refresh-interval'),
         refreshIntervalVal: document.getElementById('refresh-interval-val'),
         overBudgetThreshold: document.getElementById('over-budget-threshold'),
-        thresholdVal: document.getElementById('threshold-val')
+        thresholdVal: document.getElementById('threshold-val'),
+        minimaxScraping: document.getElementById('minimax-scraping')
     };
 
     WEEK_ORDER.forEach(function(jsDay) {
