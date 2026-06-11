@@ -395,22 +395,28 @@
                 // a `relative w-full h-2 rounded-full overflow-hidden bg-ui-muted`
                 // div; its only child for normal rows is a `div[style="width:N%"]`
                 // fill. Some rows have no width fill (e.g. M3's Weekly limit
-                // currently renders as "∞ Unlimited"): those rows are not
-                // emitted as reticle rows (no over/under budget to plot) but
-                // are still recorded in the scrape snapshot below with
-                // `percentUsed: null` and `display` carrying whatever the page
-                // rendered. The snapshot is for the local-usage-cache feature
-                // (opt-in `minimaxScrapingEnabled` setting) so other tools on
-                // this machine can read your current MiniMax usage without
-                // hitting the MiniMax API.
+                // currently renders as "∞ Unlimited" on Yearly Max plans): those
+                // rows are not emitted as reticle rows (no over/under budget to
+                // plot) but are still recorded in the scrape snapshot below.
+                // The snapshot is for the local-usage-cache feature (opt-in
+                // `minimaxScrapingEnabled` setting) so other tools on this
+                // machine can read your current MiniMax usage without hitting
+                // the MiniMax API.
                 //
-                // M3 rows observed: "5h limit", "Weekly limit" (unlimited),
-                // and "Video bonus" (3-per-day count). The bucket-by-label-text
-                // logic from the pre-M3 layout (Text Generation / Image
-                // Understanding / Web Search / etc.) is gone: M3 collapsed
-                // everything into these three rows, and the rolling-vs-fixed
-                // daily reset distinction collapsed with it — each row carries
-                // its own "Resets in ..." string in the label column.
+                // M3 rows observed: "5h limit", "Weekly limit" (unlimited on
+                // Yearly Max), and "Video bonus" (3-per-day count). The
+                // bucket-by-label-text logic from the pre-M3 layout (Text
+                // Generation / Image Understanding / Web Search / etc.) is
+                // gone: M3 collapsed everything into these three rows, and the
+                // rolling-vs-fixed daily reset distinction collapsed with it —
+                // each row carries its own "Resets in ..." string in the label
+                // column.
+                //
+                // The new "Plan Usage Details" panel (Usage Trend chart + Usage
+                // Heatmap + token counts) appears below the three usage rows
+                // and uses its own grid classes; ROW_SELECTOR below still
+                // matches only the three usage rows, so the visualizations do
+                // not get picked up as rows.
                 var ROW_SELECTOR = 'div.grid.grid-cols-\\[120px_minmax\\(0\\,1fr\\)_auto\\]';
                 var rowEls = Array.from(document.querySelectorAll(ROW_SELECTOR));
                 function classify(label) {
@@ -440,9 +446,18 @@
                     var label = ((labelSpan && labelSpan.textContent) || '').trim();
                     var resetText = readResetText(labelCol);
                     var display = (infoCol.textContent || '').replace(/\s+/g, ' ').trim();
+                    // The Weekly limit row on Yearly Max plans renders the
+                    // "∞" character next to the label span and "Unlimited"
+                    // (sometimes with the "∞" prefix) in the info column.
+                    // No other platform in the script has an "unlimited"
+                    // value, so this check is MiniMax-specific. Setting
+                    // unlimited: true disambiguates the row in the snapshot
+                    // from rows where the fill width simply failed to parse
+                    // (both produce percentUsed: null otherwise).
+                    var isUnlimited = /unlimited/i.test(display) || /∞/.test(labelCol.textContent);
                     var fill = trackCol.querySelector('div[style*="width"]');
                     var pct = null;
-                    if (fill) {
+                    if (fill && !isUnlimited) {
                         var widthMatch = (fill.style.width || '').match(/([\d.]+)%/);
                         if (widthMatch) pct = parseFloat(widthMatch[1]);
                     }
@@ -452,14 +467,17 @@
                     // literally rendered, verbatim except for whitespace runs
                     // collapsed to single spaces. Consumers that need to react
                     // to "is this row a number?" should test percentUsed !== null;
-                    // consumers that want a human-readable label use `display`.
+                    // consumers that want to know if the row is unlimited
+                    // should test unlimited === true; consumers that want a
+                    // human-readable label use `display`.
                     snapshot.rows.push({
                         label: label,
                         percentUsed: (typeof pct === 'number' && !isNaN(pct)) ? pct : null,
                         display: display,
-                        resetText: resetText
+                        resetText: resetText,
+                        unlimited: isUnlimited || undefined
                     });
-                    if (typeof pct === 'number' && !isNaN(pct)) {
+                    if (!isUnlimited && typeof pct === 'number' && !isNaN(pct)) {
                         var bucket = classify(label);
                         rows.push({
                             barElement: trackCol,
