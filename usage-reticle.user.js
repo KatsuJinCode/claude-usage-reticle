@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Claude Usage Reticle
 // @namespace    https://github.com/KatsuJinCode
-// @version      3.11
+// @version      3.12
 // @description  Visual usage tracker for Claude, Codex, Z.ai, MiniMax, Gemini — see if you're OVER or UNDER budget
 // @author       KatsuJinCode, NemesisHubris, podfishapp
 // @match        https://claude.ai/*
