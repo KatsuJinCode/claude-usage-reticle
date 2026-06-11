@@ -29,8 +29,8 @@ If your label shows `1d 5h OVER (15%)`, it means your usage is 15 percentage poi
 |---|---|---|
 | Claude | `claude.ai` → Settings → Usage | Reticles on Current session + Weekly bars. Settings panel for active-window (days + hours). |
 | Codex | `chatgpt.com/codex/cloud/settings/analytics` | Reticles on 5h + Weekly usage limit cards (incl. GPT-5.3-Codex-Spark). |
-| Z.ai | `z.ai/manage-apikey/subscription` (click Usage tab) | Reticles on Weekly + Monthly quotas. 5 Hours Quota row not reticled — Z.ai does not expose a reset timestamp for the rolling 5h window. |
-| MiniMax / MiniMax M3 | `platform.minimax.io/console/usage` | Reticles on the 5h limit and the Video bonus daily counter. The Weekly limit currently displays as "Unlimited" on Yearly Max plans — those rows are skipped (no over/under to plot). The pre-M3 `/user-center/*` path is also matched for accounts still being migrated. |
+| Z.ai | `z.ai/manage-apikey/coding-plan/personal/usage` | Reticles on Weekly + Monthly quotas. 5 Hours Quota row not reticled — Z.ai does not expose a reset timestamp for the rolling 5h window. The earlier `/manage-apikey/subscription` (click Usage tab) path is also still matched. |
+| MiniMax / MiniMax M3 | `platform.minimax.io/console/usage` | Reticles on the 5h limit and the Video bonus daily counter. The Weekly limit currently displays as "∞ Unlimited" on Yearly Max plans — those rows are skipped (no over/under to plot) but the snapshot records `unlimited: true` so the local-usage-cache feature can tell them apart from rows where the fill width just failed to parse. The pre-M3 `/user-center/*` path is also matched for accounts still being migrated. The new "Plan Usage Details" panel (Usage Trend chart + Usage Heatmap + token counts) renders below the three usage rows and does not affect row detection. |
 | Google Gemini | `gemini.google.com/usage` | Reticles on Current (Hourly) + Weekly bars. Visual cloning matches both cards perfectly. Local scraping toggle, custom refresh rates, and thresholds available. |
 
 ### Want another provider?
