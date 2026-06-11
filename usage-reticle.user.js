@@ -22,8 +22,8 @@
     'use strict';
 
     var ROOT_KEY = '__claudeUsageReticle';
-    var SCRIPT_VERSION = '3.11';
-    var BUILD_ID = '3.11-20260601-minimax-m3-and-local-usage-cache';
+    var SCRIPT_VERSION = '3.12';
+    var BUILD_ID = '3.12-20260611-minimax-unlimited-and-glm-direct-url';
     var STYLE_ATTR = 'data-usage-reticle-style';
     var ITEM_ATTR = 'data-usage-reticle-item';
     var CONTROL_ATTR = 'data-usage-reticle-control';
