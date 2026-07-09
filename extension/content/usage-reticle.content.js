@@ -2,8 +2,8 @@
     'use strict';
 
     var ROOT_KEY = '__claudeUsageReticle';
-    var SCRIPT_VERSION = '3.12.0';
-    var BUILD_ID = '3.12.0-20260611-minimax-unlimited-and-glm-direct-url';
+    var SCRIPT_VERSION = '3.13.0';
+    var BUILD_ID = '3.13.0-20260709-claude-meter-redesign';
     var STYLE_ATTR = 'data-usage-reticle-style';
     var ITEM_ATTR = 'data-usage-reticle-item';
     var CONTROL_ATTR = 'data-usage-reticle-control';
@@ -18,8 +18,15 @@
     var SESSION_ROWS = {'current session': true};
     var WEEKLY_ROWS = {'all models': true, 'sonnet only': true, 'claude design': true};
     var ALLOWED_SECTIONS = {'plan usage limits': true, 'weekly limits': true};
-    var ALL_BAR_SELECTOR = 'div[role="progressbar"][aria-valuenow]';
-    var BAR_SELECTOR = 'div[role="progressbar"][aria-label="Usage"][aria-valuenow]';
+    // Claude.ai's usage-page redesign changed the track from
+    // div[role="progressbar"][aria-label="Usage"] to div[role="meter"]. The
+    // meter keeps aria-valuenow, so the usage read is unchanged. We match BOTH
+    // shapes so the script keeps working whether a user is on the old layout or
+    // the redesigned one — a hard cutover would silently break one of the two,
+    // and the live usage page can't be validated without a paid plan, so
+    // supporting either DOM is the safe choice.
+    var ALL_BAR_SELECTOR = 'div[role="meter"][aria-valuenow], div[role="progressbar"][aria-valuenow]';
+    var BAR_SELECTOR = 'div[role="meter"][aria-valuenow], div[role="progressbar"][aria-label="Usage"][aria-valuenow]';
     var DEFAULT_SETTINGS = {
         activeWindowEnabled: false,
         activeDays: [0, 1, 2, 3, 4, 5, 6],
@@ -1201,6 +1208,10 @@
             if (!node) break;
             var nodes = node.querySelectorAll('span, div, p, small, font');
             for (var i = 0; i < nodes.length; i++) {
+                // Require a leaf element: the redesign sometimes wraps "Resets …"
+                // in a container whose textContent also matches, but we want the
+                // actual text node so downstream matching isn't fooled by a wrapper.
+                if (nodes[i].children.length !== 0) continue;
                 var nc = (nodes[i].textContent || '').replace(/\s+/g, ' ').trim();
                 if (RESET_RE.test(nc) || (depth > 0 && WEEKDAY_TIME_RE.test(nc))) {
                     return {block: node, resetEl: nodes[i]};
@@ -1211,22 +1222,33 @@
     }
 
     function findTitle(block, resetEl) {
-        var spans = block.querySelectorAll('span');
-        for (var i = 0; i < spans.length; i++) {
-            var span = spans[i];
-            if (span === resetEl) continue;
-            if (resetEl && (resetEl.contains(span) || span.contains(resetEl))) {
-                if (span.contains(resetEl)) continue;
-                var candidate = normalizeText(span.textContent || '');
+        // The redesign places row titles in span/div/p elements (not always a
+        // span), alongside new label texts ("… used", "… spent", bare "% used").
+        // Only consider leaf elements and skip those auxiliary labels so we land
+        // on the real row title (e.g. "Current session", "All models").
+        var els = block.querySelectorAll('span, div, p');
+        for (var i = 0; i < els.length; i++) {
+            var el = els[i];
+            if (el.children.length !== 0) continue;
+            if (el === resetEl) continue;
+            if (resetEl && (resetEl.contains(el) || el.contains(resetEl))) {
+                if (el.contains(resetEl)) continue;
+                var candidate = normalizeText(el.textContent || '');
                 if (!candidate || /resets?/i.test(candidate)) continue;
                 var candidateKey = normalizeKey(candidate);
-                if (getWindowHours(candidateKey)) return span;
+                if (getWindowHours(candidateKey)) return el;
                 continue;
             }
-            var text = normalizeText(span.textContent || '');
-            if (!text || /used\s*$/i.test(text) || /^resets/i.test(text)) continue;
+            var text = normalizeText(el.textContent || '');
+            // Skip the redesign's auxiliary labels: "… used", "… spent",
+            // bare percentages like "17%", and the reset line.
+            if (!text) continue;
+            if (/used\s*$/i.test(text)) continue;
+            if (/spent\s*$/i.test(text)) continue;
+            if (/^\d+(?:\.\d+)?%/.test(text)) continue;
+            if (/^resets/i.test(text)) continue;
             var key = normalizeKey(text);
-            if (getWindowHours(key)) return span;
+            if (getWindowHours(key)) return el;
         }
         return null;
     }
