@@ -478,6 +478,17 @@
     var ITEM_ATTR = 'data-usage-reticle-item';
     var CONTROL_ATTR = 'data-usage-reticle-control';
     var RETICLE_SELECTOR = '[' + ITEM_ATTR + '],.usage-reticle,.delta-reticle,.reticle-overlay,.reticle-glow';
+    // @sync-region selectors
+    // Claude.ai's usage-page redesign changed the track from
+    // div[role="progressbar"][aria-label="Usage"] to div[role="meter"]. The
+    // meter keeps aria-valuenow, so the usage read is unchanged. We match BOTH
+    // shapes so the script keeps working whether a user is on the old layout or
+    // the redesigned one — a hard cutover would silently break one of the two,
+    // and the live usage page can't be validated without a paid plan, so
+    // supporting either DOM is the safe choice.
+    var ALL_BAR_SELECTOR = 'div[role="meter"][aria-valuenow], div[role="progressbar"][aria-valuenow]';
+    var BAR_SELECTOR = 'div[role="meter"][aria-valuenow], div[role="progressbar"][aria-label="Usage"][aria-valuenow]';
+    // @sync-end
     var DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
     var DAY_INDEX = {sun:0, mon:1, tue:2, wed:3, thu:4, fri:5, sat:6};
     var SESSION_ROWS = {'current session': true};
@@ -621,31 +632,68 @@
         return {hrsUntil: (reset - now) / 3600000, reset: reset};
     }
 
-    function findBlock(bar) {
+    // @sync-region finders
+    var RESET_RE = /resets?/i;
+    var WEEKDAY_TIME_RE = /^(?:mon|tue|wed|thu|fri|sat|sun)\s+\d{1,2}:\d{2}\s*(?:am|pm)?$/i;
+
+    function findResetBlock(bar) {
         var node = bar.parentElement;
         for (var depth = 0; depth < 10 && node; depth++) {
-            var spans = node.querySelectorAll('span');
-            for (var i = 0; i < spans.length; i++) {
-                if (/^\s*Resets/i.test(spans[i].textContent || '')) {
-                    return {block: node, resetEl: spans[i]};
+            node = node.parentElement;
+            if (!node) break;
+            var nodes = node.querySelectorAll('span, div, p, small, font');
+            for (var i = 0; i < nodes.length; i++) {
+                // Require a leaf element: the redesign sometimes wraps "Resets …"
+                // in a container whose textContent also matches, but we want the
+                // actual text node so downstream matching isn't fooled by a wrapper.
+                if (nodes[i].children.length !== 0) continue;
+                var nc = (nodes[i].textContent || '').replace(/\s+/g, ' ').trim();
+                if (RESET_RE.test(nc) || (depth > 0 && WEEKDAY_TIME_RE.test(nc))) {
+                    return {block: node, resetEl: nodes[i]};
                 }
             }
-            node = node.parentElement;
         }
         return null;
     }
 
     function findTitle(block, resetEl) {
-        var spans = block.querySelectorAll('span');
-        for (var i = 0; i < spans.length; i++) {
-            var span = spans[i];
-            if (span === resetEl || resetEl.contains(span) || span.contains(resetEl)) continue;
-            var text = normalizeText(span.textContent || '');
-            if (!text || /used\s*$/i.test(text) || /^resets/i.test(text)) continue;
-            return span;
+        // The redesign places row titles in span/div/p elements (not always a
+        // span), alongside new label texts ("… used", "… spent", bare "% used").
+        // Only consider leaf elements and skip those auxiliary labels so we land
+        // on the real row title (e.g. "Current session", "All models").
+        var els = block.querySelectorAll('span, div, p');
+        for (var i = 0; i < els.length; i++) {
+            var el = els[i];
+            if (el.children.length !== 0) continue;
+            if (el === resetEl) continue;
+            if (resetEl && (resetEl.contains(el) || el.contains(resetEl))) {
+                if (el.contains(resetEl)) continue;
+                var candidate = normalizeText(el.textContent || '');
+                if (!candidate || /resets?/i.test(candidate)) continue;
+                var candidateKey = normalizeKey(candidate);
+                if (getWindowHours(candidateKey)) return el;
+                continue;
+            }
+            var text = normalizeText(el.textContent || '');
+            // Skip the redesign's auxiliary labels: "… used", "… spent",
+            // bare percentages like "17%", and the reset line.
+            if (!text) continue;
+            if (/used\s*$/i.test(text)) continue;
+            if (/spent\s*$/i.test(text)) continue;
+            if (/^\d+(?:\.\d+)?%/.test(text)) continue;
+            if (/^resets/i.test(text)) continue;
+            var key = normalizeKey(text);
+            if (getWindowHours(key)) return el;
         }
         return null;
     }
+
+    function getWindowHours(label) {
+        if (SESSION_ROWS[label]) return 5;
+        if (WEEKLY_ROWS[label]) return 168;
+        return null;
+    }
+    // @sync-end
 
     function getSectionTitle(section) {
         var heading = section && section.querySelector('h1,h2,h3,h4');
@@ -760,8 +808,8 @@
             return 0;
         }
         var added = 0;
-        document.querySelectorAll('div[role="progressbar"][aria-label="Usage"][aria-valuenow]').forEach(function(bar) {
-            var found = findBlock(bar);
+        document.querySelectorAll(BAR_SELECTOR).forEach(function(bar) {
+            var found = findResetBlock(bar);
             if (!found) return;
             var title = findTitle(found.block, found.resetEl);
             var label = normalizeKey(title ? title.textContent : '');

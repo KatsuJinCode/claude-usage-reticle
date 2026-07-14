@@ -18,6 +18,7 @@
     var SESSION_ROWS = {'current session': true};
     var WEEKLY_ROWS = {'all models': true, 'sonnet only': true, 'claude design': true};
     var ALLOWED_SECTIONS = {'plan usage limits': true, 'weekly limits': true};
+    // @sync-region selectors
     // Claude.ai's usage-page redesign changed the track from
     // div[role="progressbar"][aria-label="Usage"] to div[role="meter"]. The
     // meter keeps aria-valuenow, so the usage read is unchanged. We match BOTH
@@ -27,6 +28,7 @@
     // supporting either DOM is the safe choice.
     var ALL_BAR_SELECTOR = 'div[role="meter"][aria-valuenow], div[role="progressbar"][aria-valuenow]';
     var BAR_SELECTOR = 'div[role="meter"][aria-valuenow], div[role="progressbar"][aria-label="Usage"][aria-valuenow]';
+    // @sync-end
     var DEFAULT_SETTINGS = {
         activeWindowEnabled: false,
         activeDays: [0, 1, 2, 3, 4, 5, 6],
@@ -1198,6 +1200,7 @@
         return null;
     }
 
+    // @sync-region finders
     var RESET_RE = /resets?/i;
     var WEEKDAY_TIME_RE = /^(?:mon|tue|wed|thu|fri|sat|sun)\s+\d{1,2}:\d{2}\s*(?:am|pm)?$/i;
 
@@ -1258,6 +1261,7 @@
         if (WEEKLY_ROWS[label]) return 168;
         return null;
     }
+    // @sync-end
 
     function getUsagePercent(bar, row) {
         var now = parseFloat(bar.getAttribute('aria-valuenow'));

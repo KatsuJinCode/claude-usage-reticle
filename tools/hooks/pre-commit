@@ -1,0 +1,38 @@
+#!/usr/bin/env bash
+#
+# pre-commit — blocks a commit if the synced selector/finder regions have
+# drifted between the three reticle artifacts. Run `node tools/sync.js` to fix.
+#
+# Installed via core.hooksPath so this file ships with the repo (see
+# tools/install-hooks.sh). To bypass for a WIP commit, use `git commit -n`
+# (--no-verify) — but never push a -n commit that touches the synced regions.
+#
+set -euo pipefail
+
+# Only run if any of the relevant files are staged, so unrelated commits aren't
+# slowed down by a sync check.
+staged=$(git diff --cached --name-only --diff-filter=ACM 2>/dev/null || true)
+if ! grep -Eq 'usage-reticle\.user\.js|extension/content/usage-reticle\.content\.js|bookmarklet\.html' <<<"$staged"; then
+    exit 0
+fi
+
+# Locate the repo root (the hook runs with CWD inside the work tree, but be safe).
+root=$(git rev-parse --show-toplevel 2>/dev/null || pwd)
+
+if [ -f "$root/tools/sync.js" ]; then
+    if ! node "$root/tools/sync.js" --check >/dev/null; then
+        echo "" >&2
+        echo "ERROR: synced regions have drifted between the reticle artifacts." >&2
+        echo "       One of usage-reticle.user.js / extension content script / bookmarklet.html" >&2
+        echo "       has selector or finder logic that doesn't match the canonical source." >&2
+        echo "" >&2
+        echo "       Edit usage-reticle.user.js as the source of truth, then run:" >&2
+        echo "         node tools/sync.js" >&2
+        echo "       stage the regenerated files and re-commit." >&2
+        echo "" >&2
+        echo "       (To bypass for a throwaway commit: git commit -n --no-verify)" >&2
+        exit 1
+    fi
+fi
+
+exit 0
